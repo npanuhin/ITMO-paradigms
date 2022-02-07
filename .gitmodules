@@ -1,0 +1,3 @@
+[submodule "tests"]
+	path = tests
+	url = https://www.kgeorgiy.info/git/geo/paradigms-2022
