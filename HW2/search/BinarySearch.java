@@ -111,7 +111,7 @@ public class BinarySearch {
             array[i] = Integer.parseInt(args[i + 1]);
         }
 
-        // System.out.println(binsearch_iterative(array, x));
-        System.out.println(binsearch_recursive(array, x));
+        System.out.println(binsearch_iterative(array, x));
+        // System.out.println(binsearch_recursive(array, x));
     }
 }
