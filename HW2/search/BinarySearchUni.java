@@ -1,9 +1,9 @@
 // Общее:
-//   * valid {smth} / валидное {что-то} — в соответствии с документацией Java
+//   * valid {smth} / валидное {что-то} — в соответствии с документацией Java, **в т.ч. если это не указано**
 //   * "строковое представление" / "строка" — Непустая последовательность символов (char) без пробельных символов
 //   * size({что-то}) — Размер {чего-то} в общепринятом понимании или в соответствии с документацией Java
 //                      Для массивов: size(arr) ∈ ℤ, size(arr) ≥ 0
-//   * Нумерация с 0
+//   * Нумерация (в т.ч. индексы массивов) с 0
 
 
 package search;
@@ -11,128 +11,147 @@ package search;
 
 public class BinarySearchUni {
 
-    // Pred: array — непустой массив целых чисел (int):
-    //      * forall i = 0..(size(array) - 1): args[i] ∈ ℤ
-    //      * ∃ res ∈ [0:size(array)), такой, что:
-    //          * forall i = 0..(res - 2): args[i] ≥ args[i + 1]
-    //          * forall i = res..(size(array) - 2): args[i] ≤ args[i + 1]
+    // Pred:
+    //      * array[int], size(array) > 0
+    //      * ∃ res ∈ [0;size(array)):
+    //          * ∀ i ∈ [0;res - 2]: array[i] > array[i + 1]
+    //          * ∀ i ∈ [res;size(array) - 2]: array[i] < array[i + 1]
     //
-    // Post: Возвращено число res (int):
-    //      * 0 ≤ res < size(array)
-    //      * res удовлетворяет условию Pred
+    // Post:
+    //      * Return: int res, удовлетворяющий условию Pred
     //
     public static int binsearch_iterative(final int[] array) {
         int left = -1, right = array.length - 1, middle;
         // left = -1, right = size(array) - 1, middle — undefined
 
-        // Inv: -1 ≤ left < middle (may be undefined) < right < size(array)
-        //      * left < res
-        //      * right >= res
-        // Длина отрезка [left:right] на каждом шаге уменьшается (доказано позже) ⇒ right - left -> 0 ⇒ цикл заканчивается
+        // Inv до конца функции:
+        //      * -1 ≤ left ≤(2) middle (may be undefined) ≤(3) right < size(array)
+        //      * left < res ≤ right
+        //          Док-во в данный момент:
+        //          * left = -1 < 0 ≤ res ⇒ left < res
+        //          * res < size(array) ⇒ res ≤ size(array) - 1 = right ⇒ res ≤ right
+
+        // Длина отрезка [left:right] на каждом шаге уменьшается (док-во в конце цикла) ⇒
+        // ⇒ right - left -> 0 ⇒ цикл заканчивается
         while (right - left > 1) {
-            // Inv && left + 1 < right
+            // Inv && right - left > 1
 
-            // Inv && left + 1 < right
-            middle = (left + right) / 2;
-            // Inv [-1 ≤ left < middle < right < size(array)]
-            // Второе неравенство Inv выполняется, поскольку left < right ⇒ left * 2 < (left + right) ⇒ left < (left + right) / 2
-            // Третье неравенство Inv выполняется, поскольку left < right ⇒ (left + right) < right * 2 ⇒ (left + right) / 2 < right
+            // Inv && right - left ≥ 2
+            middle = (left + right) / 2;  // left + (right - left) // 2
+            // Inv && right - left ≥ 2 && left < middle < right
+            // Док-во left <(1) middle <(2) right (и Inv) в данный момент:
+            //      Неравенства (1) и (2) выполняются, поскольку right - left ≥ 2:
+            //      1: (right - left) // 2 ≥ 1 ⇒ left + (right - left) // 2 > left ⇒ left < middle
+            //      2: left + (right - left) // 2 ≤ left + (right - left) / 2 = (left + right) / 2 <
+            //          < (right + right) / 2 = right ⇒ middle < right
 
-            // Inv
-            if (array[middle] >= array[middle + 1]) {
-                // Inv && array[middle] >= array[middle + 1]
+            // Inv && left < middle < right
+            if (array[middle] >= array[middle + 1]) {  // middle < right < size(array) ⇒ middle + 1 < size(array)
+                // Inv && left < middle < right && array[middle] ≥ array[middle + 1]
                 left = middle;
-                // -1 ≤ left=middle < size(array) && array[left] >= array[left + 1] ⇒ left < res
+                // Док-во Inv(left < res):
+                //      -1 ≤ left=middle < size(array) && array[left] ≥ array[left + 1] и array монотонно убывает,
+                //      затем возрастает (см. Pred) ⇒ нер-во выполняется для ∀ i ≤ left ⇒ left < res (Inv)
 
             } else {
-                // -1 ≤ middle < right < size(array) && array[middle] < array[middle + 1]  (right < size(array))
+                // Inv && left < middle < right && array[middle] < array[middle + 1]
                 right = middle;
-                // -1 < middle=right < size(array) && array[right] < array[right + 1]  (right < size(array)) ⇒ res <= right
+                // Док-во Inv(res ≤ right):
+                //      -1 < middle=right < size(array) && array[right] < array[right + 1] и array монотонно убывает,
+                //      затем возрастает (см. Pred) ⇒ нер-во выполняется для ∀ i ≥ right ⇒ res ≥ right (Inv)
             }
-            // Inv && (left < new_left || new_right < right), то есть отрезок [new_left:new_right] меньше [left:right]
+            // Inv && (old_left < new_left || new_right < old_right),
+            // то есть отрезок [new_left:new_right] меньше [left:right] ⇒ цикл заканчивается
 
         }
-        // Inv && left + 1 = right (right - left = 1), middle не важен
+        // Inv && right - left = 1
 
         // Inv && left + 1 = right
-        // Поскольку 0 ≤ right < size(array), left < res, res <= right и left + 1 = right:
-        //      res = right
+        // Поскольку left < res ≤ right и left + 1 = right: res = right
         return right;
     }
 
-    // Pred: array — непустой массив целых чисел (int):
-    //          * forall i = 0..(size(array) - 1): args[i] ∈ ℤ
-    //          * ∃ res ∈ [0:size(array)), такой, что:
-    //              * forall i = 0..(res - 2): args[i] ≥ args[i + 1]
-    //              * forall i = res..(size(array) - 2): args[i] ≤ args[i + 1]
-    //       left — целое число (int), left ∈ ℤ, -1 ≤ left < size(array)
-    //       right — целое неотрицательное число (int), right ∈ ℤ, 0 ≤ right < size(array)
+    // Pred:
+    //      * array[int], size(array) > 0
+    //      * ∃ res ∈ [0;size(array)):
+    //          * ∀ i ∈ [0;res - 2]: array[i] > array[i + 1]
+    //          * ∀ i ∈ [res;size(array) - 2]: array[i] < array[i + 1]
+    //      * int left, right:
+    //          * left, right ∈ ℤ
+    //          Inv: * -1 ≤ left <(2) res ≤(3) right < size(array)
     //
-    // Inv: -1 ≤ left < middle (may be undefined) < right < size(array)
-    //      * left < res
-    //      * right >= res
+    // Условие выхода из рекурсии: Длина отрезка [left:right] на каждом шаге уменьшается ⇒
+    //      ⇒ right - left -> 0 ⇒ рекурсия закончится на `if (right - left <= 1)`
     //
-    // Условие выхода из рекурсии: Длина отрезка [left:right] на каждом шаге уменьшается ⇒ right - left -> 0 ⇒ цикл заканчивается
-    //
-    // Post: Возвращено число res (int):
-    //      * 0 ≤ res < size(array)
-    //      * res удовлетворяет условию Pred
+    // Post:
+    //      * Return: int res, удовлетворяющий условию Pred
     //
     private static int binsearch_recursive_inner(final int[] array, final int left, final int right) {
         // Inv
         if (right - left <= 1) {
-            // Inv && left + 1 = right
-            // Поскольку 0 ≤ right < size(array), left < res, res <= right и left + 1 = right:
-            //      res = right
+            // Inv && right - left = 1 ⇒ left + 1 = right
+            // Поскольку left < res ≤ right и left + 1 = right: res = right
             return right;
         }
-        // Inv && left + 1 < right
+        // Inv && right - left > 1
 
-        // Inv && left + 1 < right
+        // Inv && right - left ≥ 2
         final int middle = (left + right) / 2;
-        // Inv [-1 ≤ left < middle < right < size(array)]
-        // Второе неравенство Inv выполняется, поскольку left < right ⇒ left * 2 < (left + right) ⇒ left < (left + right) / 2
-        // Третье неравенство Inv выполняется, поскольку left < right ⇒ (left + right) < right * 2 ⇒ (left + right) / 2 < right
+        // Доп. Inv до конца функции:
+        //      * -1 ≤ left < middle < right < size(array)
 
-        // Inv
-        if (array[middle] >= array[middle + 1]) {
-            // Inv && array[middle] >= array[middle + 1]
-            //
-            // Для вызова binsearch_recursive_inner:
-            //      -1 ≤ left=middle < size(array) && array[left] >= array[left + 1] ⇒ left < res
+        // Inv && right - left ≥ 2 && left < middle < right
+        // Док-во left <(1) middle <(2) right (и Inv) в данный момент:
+        //      Неравенства (1) и (2) выполняются, поскольку right - left ≥ 2:
+        //      1: (right - left) // 2 ≥ 1 ⇒ left + (right - left) // 2 > left ⇒ left < middle
+        //      2: left + (right - left) // 2 ≤ left + (right - left) / 2 = (left + right) / 2 <
+        //          < (right + right) / 2 = right ⇒ middle < right
+
+        // Inv && left < middle < right
+        if (array[middle] >= array[middle + 1]) {  // middle < right < size(array) ⇒ middle + 1 < size(array)
+            // Inv && left < middle < right && array[middle] ≥ array[middle + 1]
+
+            // Док-во Inv(left < res) для вызова binsearch_recursive_inner:  new_left = middle
+            //      -1 ≤ new_left=middle < size(array) && array[new_left] ≥ array[new_left + 1]
+            //      и array монотонно убывает, затем возрастает (см. Pred) ⇒
+            //      нер-во выполняется для ∀ i ≤ new_left ⇒ new_left < res (Inv)
             return binsearch_recursive_inner(array, middle, right);
+
         } else {
-            // -1 ≤ middle < right < size(array) && array[middle] < array[middle + 1]  (right < size(array))
-            //
-            // Для вызова binsearch_recursive_inner:
-            //      -1 < middle=right < size(array) && array[right] < array[right + 1]  (right < size(array)) ⇒ res <= right
+            // Inv && left < middle < right && array[middle] < array[middle + 1]
+
+            // Док-во Inv(res ≤ right) для вызова binsearch_recursive_inner:  new_right = middle
+            //      -1 < middle=new_right < size(array) && array[new_right] < array[new_right + 1]
+            //      и array монотонно убывает, затем возрастает (см. Pred) ⇒
+            //      ⇒ нер-во выполняется для ∀ i ≥ new_right ⇒ res ≥ new_right (Inv)
             return binsearch_recursive_inner(array, left, middle);
         }
     }
 
-    // Pred: array — непустой массив целых чисел (int):
-    //          * forall i = 0..(size(array) - 1): args[i] ∈ ℤ
-    //          * ∃ res ∈ [0:size(array)), такой, что:
-    //              * forall i = 0..(res - 2): args[i] ≥ args[i + 1]
-    //              * forall i = res..(size(array) - 2): args[i] ≤ args[i + 1]
+    // Pred:
+    //      * array[int], size(array) > 0
+    //      * ∃ res ∈ [0;size(array)):
+    //          * ∀ i ∈ [0;res - 2]: array[i] > array[i + 1]
+    //          * ∀ i ∈ [res;size(array) - 2]: array[i] < array[i + 1]
     //
-    // Post: Возвращено число res (int):
-    //      * 0 ≤ res < size(array)
-    //      * res удовлетворяет условию Pred
+    // Post:
+    //      * Return: int res, удовлетворяющий условию Pred
     //
     public static int binsearch_recursive(final int[] array) {
         return binsearch_recursive_inner(array, -1, array.length - 1);
     }
 
-    // Pred: args — непустой массив строк:
-    //      * forall x in args: x - строковое представление валидного целого числа (repr(args[i]) ∈ ℤ, основание сс = 10)
-    //      * ∃ есть массив чисел b[int], такой что size(b) = size(args) и args[i] — строковое представление b[i]
-    //      * ∃ res ∈ [0:size(b)), такой, что:
-    //          * forall i = 0..(res - 2): b[i] ≥ b[i + 1]
-    //          * forall i = res..(size(b) - 2): b[i] ≤ b[i + 1]
+    // Pred:
+    //      * args[String], size(args) > 0
+    //      * ∀ x ∈ args: x - строковое представление целого числа int, основание системы счисления: 10
+    //      * ∃ есть массив чисел b[int], такой что size(b) = size(args), args[i] — строковое представление b[i] и:
+    //          * ∃ res ∈ [0;size(b)):
+    //              * ∀ i ∈ [0;res - 2]: b[i] ≥ b[i + 1]
+    //              * ∀ i ∈ [res;size(b) - 2]: b[i] ≤ b[i + 1]
     //
-    // Post: На поток System.out подано строковое представление целого числа (int) — ответа на задачу, и следующий за ним перевод строки
-    //      * Ответ на задачу: неотрицательное число res (res ∈ ℤ, 0 ≤ res < right), удовлетворяющее Pred
+    // Post:
+    //      На поток System.out подано строковое представление числа (int) — ответа на задачу, затем перевод строки
+    //      * Ответ на задачу: int res ∈ [0;size(array)), удовлетворяющий условию Pred
     //
     public static void main(String[] args) {
 

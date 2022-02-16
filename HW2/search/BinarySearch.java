@@ -1,9 +1,14 @@
+// Warning! All comments in this file are outdated, incorrect, etc. New version is avaliable in BinarySearchUni.java modification
+// Warning! Все комментарии в этом файле плохие, устаревшие, неправильные и т.п. Новая версия в модификации BinarySearchUni.java
+
+
 // Общее:
 //   * valid {smth} / валидное {что-то} — в соответствии с документацией Java
 //   * "строчное представление" / "строка" — Непустая последовательность символов (char) без валидных пробельных символов
 //   * size({что-то}) — Размер {чего-то} в общепринятом понимании или в соответствии с документацией Javaдля массивов ≥ 0
 //                      Для массивов: size(arr) ∈ ℤ, size(arr) ≥ 0
 //   * Нумерация с 0
+//   * {varible}' — "Текущее значение {variable}", new_{variable} и old_{variable} по контексту
 
 
 package search;
