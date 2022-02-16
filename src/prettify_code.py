@@ -1,4 +1,5 @@
 import os
+import re
 
 HOME = "../"
 EXTENSIONS = (".java", ".py", ".cmd")
@@ -21,6 +22,9 @@ for path, folders, files in os.walk(mkpath(HOME)):
 
             # Replace tabs with spaces:
             content = content.replace('\t', ' ' * 4)
+
+            # Remove spaces and the end of lines
+            content = re.sub(r"([\t ]+)\n", "\n", content)
 
             # Add newline at the end of file if missing:
             if not content.endswith('\n'):

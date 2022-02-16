@@ -41,7 +41,7 @@ public class BinarySearch {
                 right = middle;
                 // -1 < middle=right ≤ size(array)
             }
-            // Inv && (left < new_left || new_right < right) 
+            // Inv && (left < new_left || new_right < right)
         }
         // Inv && left + 1 = right (right - left = 1), middle не важен
 
@@ -101,7 +101,7 @@ public class BinarySearch {
     //           *  Массив чисел b[int], такой что size(b) = size(a) и a[i] — строчное представление b[i], неубывает: forall i = 1..(size(b) - 1): b[i - 1] ≥ b[i]
     //
     // Post: На поток System.out подано строчное представление целого числа — ответа на задачу, и следующий за ним перевод строки
-    // 
+    //
     public static void main(String[] args) {
 
         final int x = Integer.parseInt(args[0]);
