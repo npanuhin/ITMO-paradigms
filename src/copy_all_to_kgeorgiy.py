@@ -59,6 +59,8 @@ def main():
 
     [copy(("HW2", "search", file), ("java-solutions", "search")) for file in listdir_java("HW2", "search")]
 
+    [copy(("HW3", "queue", file), ("java-solutions", "queue")) for file in listdir_java("HW3", "queue")]
+
     [copy(("HW1", "Main.java"), ("java-solutions"))]
 
 
