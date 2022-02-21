@@ -2,7 +2,7 @@ import os
 import re
 
 HOME = "../"
-EXTENSIONS = (".java", ".py", ".cmd")
+EXTENSIONS = (".java", ".py", ".cpp", ".c" ".cmd")
 
 
 def mkpath(*paths):

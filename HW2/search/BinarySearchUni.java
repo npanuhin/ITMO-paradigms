@@ -62,7 +62,6 @@ public class BinarySearchUni {
             }
             // Inv && (old_left < new_left || new_right < old_right),
             // то есть отрезок [new_left:new_right] меньше [left:right] ⇒ цикл заканчивается
-
         }
         // Inv && right - left = 1
 
