@@ -41,6 +41,14 @@ public class ArrayQueueModule {
         tail = (tail + 1) % elements.length;
     }
 
+    public static void push(Object element) {
+        assert element != null;
+
+        ensureCapacity(size() + 1);
+        elements[head] = element;
+        head = (head > 0 ? head - 1 else element.length);
+    }
+
     public static Object element() {
         assert size() > 0;
 
