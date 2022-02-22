@@ -20,7 +20,7 @@ public class BinarySearchUni {
     // Post:
     //      * Return: int res, удовлетворяющий условию Pred
     //
-    public static int binsearch_iterative(final int[] array) {
+    public static int binsearchIterative(final int[] array) {
         int left = -1, right = array.length - 1, middle;
         // left = -1, right = size(array) - 1, middle — undefined
 
@@ -72,12 +72,16 @@ public class BinarySearchUni {
 
     // Pred:
     //      * array[int], size(array) > 0
-    //      * ∃ res ∈ [0;size(array)):
-    //          * ∀ i ∈ [0;res - 2]: array[i] > array[i + 1]
-    //          * ∀ i ∈ [res;size(array) - 2]: array[i] < array[i + 1]
     //      * int left, right:
     //          * left, right ∈ ℤ
-    //          Inv: * -1 ≤ left <(2) res ≤(3) right < size(array)
+    //          * -1 ≤ left < right < size(array)
+    //      * ∃ res ∈ (left;right]:
+    //          * ∀ i ∈ [0;res - 2]: array[i] > array[i + 1]
+    //          * ∀ i ∈ [res;size(array) - 2]: array[i] < array[i + 1]
+    //
+    // Inv рекурсии: -1 ≤ left < res ≤ right < size(array)
+    //      Док-во изначально (по Pred):
+    //      -1 ≤ left < right < size(array) и ∃ res ∈ (left;right] ⇒ -1 ≤ left < res ≤ right < size(array)
     //
     // Условие выхода из рекурсии: Длина отрезка [left:right] на каждом шаге уменьшается ⇒
     //      ⇒ right - left -> 0 ⇒ рекурсия закончится на `if (right - left <= 1)`
@@ -85,7 +89,7 @@ public class BinarySearchUni {
     // Post:
     //      * Return: int res, удовлетворяющий условию Pred
     //
-    private static int binsearch_recursive_inner(final int[] array, final int left, final int right) {
+    private static int binsearchRecursiveInner(final int[] array, final int left, final int right) {
         // Inv
         if (right - left <= 1) {
             // Inv && right - left = 1 ⇒ left + 1 = right
@@ -100,8 +104,8 @@ public class BinarySearchUni {
         //      * -1 ≤ left < middle < right < size(array)
 
         // Inv && right - left ≥ 2 && left < middle < right
-        // Док-во left <(1) middle <(2) right (и Inv) в данный момент:
-        //      Неравенства (1) и (2) выполняются, поскольку right - left ≥ 2:
+        // Док-во left < middle < right в данный момент:
+        //      Неравенства выполняются, поскольку right - left ≥ 2:
         //      1: (right - left) // 2 ≥ 1 ⇒ left + (right - left) // 2 > left ⇒ left < middle
         //      2: left + (right - left) // 2 ≤ left + (right - left) / 2 = (left + right) / 2 <
         //          < (right + right) / 2 = right ⇒ middle < right
@@ -110,20 +114,20 @@ public class BinarySearchUni {
         if (array[middle] >= array[middle + 1]) {  // middle < right < size(array) ⇒ middle + 1 < size(array)
             // Inv && left < middle < right && array[middle] ≥ array[middle + 1]
 
-            // Док-во Inv(left < res) для вызова binsearch_recursive_inner:  new_left = middle
+            // Док-во Inv(left < res) для вызова binsearchRecursiveInner:  new_left = middle
             //      -1 ≤ new_left=middle < size(array) && array[new_left] ≥ array[new_left + 1]
             //      и array монотонно убывает, затем возрастает (см. Pred) ⇒
             //      нер-во выполняется для ∀ i ≤ new_left ⇒ new_left < res (Inv)
-            return binsearch_recursive_inner(array, middle, right);
+            return binsearchRecursiveInner(array, middle, right);
 
         } else {
             // Inv && left < middle < right && array[middle] < array[middle + 1]
 
-            // Док-во Inv(res ≤ right) для вызова binsearch_recursive_inner:  new_right = middle
+            // Док-во Inv(res ≤ right) для вызова binsearchRecursiveInner:  new_right = middle
             //      -1 < middle=new_right < size(array) && array[new_right] < array[new_right + 1]
             //      и array монотонно убывает, затем возрастает (см. Pred) ⇒
             //      ⇒ нер-во выполняется для ∀ i ≥ new_right ⇒ res ≥ new_right (Inv)
-            return binsearch_recursive_inner(array, left, middle);
+            return binsearchRecursiveInner(array, left, middle);
         }
     }
 
@@ -136,8 +140,10 @@ public class BinarySearchUni {
     // Post:
     //      * Return: int res, удовлетворяющий условию Pred
     //
-    public static int binsearch_recursive(final int[] array) {
-        return binsearch_recursive_inner(array, -1, array.length - 1);
+    public static int binsearchRecursive(final int[] array) {
+        // left = -1, right = size(array) - 1 ⇒ 1 ≤ left < res ≤ right < size(array)
+        // Cл. выполняется Pred(binsearchRecursiveInner)
+        return binsearchRecursiveInner(array, -1, array.length - 1);
     }
 
     // Pred:
@@ -159,7 +165,7 @@ public class BinarySearchUni {
             array[i] = Integer.parseInt(args[i]);
         }
 
-        System.out.println(binsearch_iterative(array));
-        // System.out.println(binsearch_recursive(array));
+        System.out.println(binsearchIterative(array));
+        // System.out.println(binsearchRecursive(array));
     }
 }
