@@ -26,19 +26,26 @@ public class ArrayQueueModuleTest {
         ArrayQueueModule.enqueue(0);
         ArrayQueueModule.enqueue(1);
         ArrayQueueModule.enqueue(2);
-
-        System.out.println("size = " + ArrayQueueModule.size());
-
-        dump();
-
-        ArrayQueueModule.enqueue(0);
-        ArrayQueueModule.enqueue(1);
+        ArrayQueueModule.enqueue(2);
+        ArrayQueueModule.enqueue(2);
+        ArrayQueueModule.enqueue(2);
+        ArrayQueueModule.enqueue(2);
         ArrayQueueModule.enqueue(2);
 
-        System.out.println("size = " + ArrayQueueModule.size());
+        System.out.println(ArrayQueueModule.element());
 
-        dump();
+        // System.out.println("size = " + ArrayQueueModule.size());
 
-        System.out.println();
+        // dump();
+
+        // ArrayQueueModule.enqueue(0);
+        // ArrayQueueModule.enqueue(1);
+        // ArrayQueueModule.enqueue(2);
+
+        // System.out.println("size = " + ArrayQueueModule.size());
+
+        // dump();
+
+        // System.out.println();
     }
 }

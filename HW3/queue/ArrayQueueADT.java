@@ -1,11 +1,19 @@
 package queue;
 
-import java.util.Arrays;
+import java.util.Objects;
 
 
 public class ArrayQueueADT {
     private int head = 0, tail = 0;
     private Object[] elements = new Object[1];
+
+    private static int prev(ArrayQueueADT queue, int index) {
+        return (index > 0 ? index : queue.elements.length) - 1;
+    }
+
+    private static int next(ArrayQueueADT queue, int index) {
+        return (index + 1) % queue.elements.length;
+    }
 
     private static void ensureCapacity(ArrayQueueADT queue, int capacity) {
         int size = size(queue);
@@ -28,7 +36,6 @@ public class ArrayQueueADT {
 
             queue.head = 0;
             queue.tail = size;
-
             queue.elements = new_elements;
         }
     }
@@ -38,7 +45,15 @@ public class ArrayQueueADT {
 
         ensureCapacity(queue, size(queue) + 1);
         queue.elements[queue.tail] = element;
-        queue.tail = (queue.tail + 1) % queue.elements.length;
+        queue.tail = next(queue, queue.tail);
+    }
+
+    public static void push(ArrayQueueADT queue, Object element) {
+        assert element != null;
+
+        ensureCapacity(queue, size(queue) + 1);
+        queue.elements[queue.head] = element;
+        queue.head = prev(queue, queue.head);
     }
 
     public static Object element(ArrayQueueADT queue) {
@@ -47,21 +62,32 @@ public class ArrayQueueADT {
         return queue.elements[queue.head];
     }
 
+    public static Object peek(ArrayQueueADT queue) {
+        assert size(queue) > 0;
+
+        return queue.elements[prev(queue, queue.tail)];
+    }
+
     public static Object dequeue(ArrayQueueADT queue) {
         assert size(queue) > 0;
 
         Object result = queue.elements[queue.head];
         queue.elements[queue.head] = null;
-        queue.head = (queue.head + 1) % queue.elements.length;
+        queue.head = next(queue, queue.head);
+        return result;
+    }
+
+    public static Object remove(ArrayQueueADT queue) {
+        assert size(queue) > 0;
+
+        queue.tail = prev(queue, queue.tail);
+        Object result = queue.elements[queue.tail];
+        queue.elements[queue.tail] = null;
         return result;
     }
 
     public static int size(ArrayQueueADT queue) {
-        if (queue.head > queue.tail) {
-            return queue.elements.length - queue.head + queue.tail;
-        } else {
-            return queue.tail - queue.head;
-        }
+        return queue.tail - queue.head + (queue.tail < queue.head ? queue.elements.length : 0);
     }
 
     public static boolean isEmpty(ArrayQueueADT queue) {
@@ -74,5 +100,23 @@ public class ArrayQueueADT {
         }
         queue.head = 0;
         queue.tail = 0;
+    }
+
+    public static int indexOf(ArrayQueueADT queue, Object element) {
+        for (int i = queue.head; i != queue.tail; i = next(queue, i)) {
+            if (Objects.equals(queue.elements[i], element)) {
+                return i - queue.head + (i < queue.head ? queue.elements.length : 0);
+            }
+        }
+        return -1;
+    }
+
+    public static int lastIndexOf(ArrayQueueADT queue, Object element) {
+        for (int i = prev(queue, queue.tail); i != prev(queue, queue.head); i = prev(queue, i)) {
+            if (Objects.equals(queue.elements[i], element)) {
+                return i - queue.head + (i < queue.head ? queue.elements.length : 0);
+            }
+        }
+        return -1;
     }
 }

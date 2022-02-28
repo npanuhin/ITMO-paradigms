@@ -1,11 +1,19 @@
 package queue;
 
-import java.util.Arrays;
+import java.util.Objects;
 
 
 public class ArrayQueue {
     private int head = 0, tail = 0;
     private Object[] elements = new Object[1];
+
+    private int prev(int index) {
+        return (index > 0 ? index : elements.length) - 1;
+    }
+
+    private int next(int index) {
+        return (index + 1) % elements.length;
+    }
 
     private void ensureCapacity(int capacity) {
         int size = size();
@@ -28,7 +36,6 @@ public class ArrayQueue {
 
             head = 0;
             tail = size;
-
             elements = new_elements;
         }
     }
@@ -38,7 +45,15 @@ public class ArrayQueue {
 
         ensureCapacity(size() + 1);
         elements[tail] = element;
-        tail = (tail + 1) % elements.length;
+        tail = next(tail);
+    }
+
+    public void push(Object element) {
+        assert element != null;
+
+        ensureCapacity(size() + 1);
+        elements[head] = element;
+        head = prev(head);
     }
 
     public Object element() {
@@ -47,21 +62,32 @@ public class ArrayQueue {
         return elements[head];
     }
 
+    public Object peek() {
+        assert size() > 0;
+
+        return elements[prev(tail)];
+    }
+
     public Object dequeue() {
         assert size() > 0;
 
         Object result = elements[head];
         elements[head] = null;
-        head = (head + 1) % elements.length;
+        head = next(head);
+        return result;
+    }
+
+    public Object remove() {
+        assert size() > 0;
+
+        tail = prev(tail);
+        Object result = elements[tail];
+        elements[tail] = null;
         return result;
     }
 
     public int size() {
-        if (head > tail) {
-            return elements.length - head + tail;
-        } else {
-            return tail - head;
-        }
+        return tail - head + (tail < head ? elements.length : 0);
     }
 
     public boolean isEmpty() {
@@ -74,5 +100,23 @@ public class ArrayQueue {
         }
         head = 0;
         tail = 0;
+    }
+
+    public int indexOf(Object element) {
+        for (int i = head; i != tail; i = next(i)) {
+            if (Objects.equals(elements[i], element)) {
+                return i - head + (i < head ? elements.length : 0);
+            }
+        }
+        return -1;
+    }
+
+    public int lastIndexOf(Object element) {
+        for (int i = prev(tail); i != prev(head); i = prev(i)) {
+            if (Objects.equals(elements[i], element)) {
+                return i - head + (i < head ? elements.length : 0);
+            }
+        }
+        return -1;
     }
 }

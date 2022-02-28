@@ -1,11 +1,19 @@
 package queue;
 
-import java.util.Arrays;
+import java.util.Objects;
 
 
 public class ArrayQueueModule {
     private static int head = 0, tail = 0;
     private static Object[] elements = new Object[1];
+
+    private static int prev(int index) {
+        return (index > 0 ? index : elements.length) - 1;
+    }
+
+    private static int next(int index) {
+        return (index + 1) % elements.length;
+    }
 
     private static void ensureCapacity(int capacity) {
         int size = size();
@@ -28,7 +36,6 @@ public class ArrayQueueModule {
 
             head = 0;
             tail = size;
-
             elements = new_elements;
         }
     }
@@ -38,7 +45,7 @@ public class ArrayQueueModule {
 
         ensureCapacity(size() + 1);
         elements[tail] = element;
-        tail = (tail + 1) % elements.length;
+        tail = next(tail);
     }
 
     public static void push(Object element) {
@@ -46,7 +53,7 @@ public class ArrayQueueModule {
 
         ensureCapacity(size() + 1);
         elements[head] = element;
-        head = (head > 0 ? head - 1 else element.length);
+        head = prev(head);
     }
 
     public static Object element() {
@@ -55,21 +62,32 @@ public class ArrayQueueModule {
         return elements[head];
     }
 
+    public static Object peek() {
+        assert size() > 0;
+
+        return elements[prev(tail)];
+    }
+
     public static Object dequeue() {
         assert size() > 0;
 
         Object result = elements[head];
         elements[head] = null;
-        head = (head + 1) % elements.length;
+        head = next(head);
+        return result;
+    }
+
+    public static Object remove() {
+        assert size() > 0;
+
+        tail = prev(tail);
+        Object result = elements[tail];
+        elements[tail] = null;
         return result;
     }
 
     public static int size() {
-        if (head > tail) {
-            return elements.length - head + tail;
-        } else {
-            return tail - head;
-        }
+        return tail - head + (tail < head ? elements.length : 0);
     }
 
     public static boolean isEmpty() {
@@ -82,5 +100,23 @@ public class ArrayQueueModule {
         }
         head = 0;
         tail = 0;
+    }
+
+    public static int indexOf(Object element) {
+        for (int i = head; i != tail; i = next(i)) {
+            if (Objects.equals(elements[i], element)) {
+                return i - head + (i < head ? elements.length : 0);
+            }
+        }
+        return -1;
+    }
+
+    public static int lastIndexOf(Object element) {
+        for (int i = prev(tail); i != prev(head); i = prev(i)) {
+            if (Objects.equals(elements[i], element)) {
+                return i - head + (i < head ? elements.length : 0);
+            }
+        }
+        return -1;
     }
 }
