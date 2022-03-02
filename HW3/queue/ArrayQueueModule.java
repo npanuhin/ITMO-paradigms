@@ -52,8 +52,8 @@ public class ArrayQueueModule {
         assert element != null;
 
         ensureCapacity(size() + 1);
-        elements[head] = element;
         head = prev(head);
+        elements[head] = element;
     }
 
     public static Object element() {

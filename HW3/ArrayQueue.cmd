@@ -5,5 +5,5 @@ javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "..\tests\java;../;." "queue/Arra
 javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "..\tests\java;../;." "queue/ArrayQueueADTTest.java"
 javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "..\tests\java;../;." "queue/ArrayQueueTest.java"
 java -cp "C:\Cache" queue.ArrayQueueModuleTest
-rem java -cp "C:\Cache" queue.ArrayQueueADTTest
-rem java -cp "C:\Cache" queue.ArrayQueueTest
+java -cp "C:\Cache" queue.ArrayQueueADTTest
+java -cp "C:\Cache" queue.ArrayQueueTest

@@ -3,10 +3,17 @@ package queue;
 
 public class ArrayQueueModuleTest {
 
-    public static void fill() {
-        for (int i = 0; i < 10; i++) {
-            System.out.println("put(" + i + ")");
+    public static void fill(int n) {
+        for (int i = 0; i < n; i++) {
+            System.out.println("enqueue(" + i + ")");
             ArrayQueueModule.enqueue(i);
+        }
+    }
+
+    public static void rfill(int n) {
+        for (int i = 0; i < n; i++) {
+            System.out.println("push(" + i + ")");
+            ArrayQueueModule.push(i);
         }
     }
 
@@ -20,32 +27,33 @@ public class ArrayQueueModuleTest {
         }
     }
 
+    public static void rdump() {
+        while (!ArrayQueueModule.isEmpty()) {
+            System.out.println(
+                "size = " + ArrayQueueModule.size() + "\t" +
+                "peek = " + ArrayQueueModule.peek() + "\t" +
+                "remove = " + ArrayQueueModule.remove()
+            );
+        }
+    }
+
+    public static int size() {
+        return ArrayQueueModule.size();
+    }
+
     public static void main(String[] args) {
         System.out.println("---------- ArrayQueueModule Test ----------");
 
-        ArrayQueueModule.enqueue(0);
-        ArrayQueueModule.enqueue(1);
-        ArrayQueueModule.enqueue(2);
-        ArrayQueueModule.enqueue(2);
-        ArrayQueueModule.enqueue(2);
-        ArrayQueueModule.enqueue(2);
-        ArrayQueueModule.enqueue(2);
-        ArrayQueueModule.enqueue(2);
+        fill(10);
+        assert size() == 10;
+        dump();
+        assert size() == 0;
 
-        System.out.println(ArrayQueueModule.element());
+        rfill(10);
+        assert size() == 10;
+        rdump();
+        assert size() == 0;
 
-        // System.out.println("size = " + ArrayQueueModule.size());
-
-        // dump();
-
-        // ArrayQueueModule.enqueue(0);
-        // ArrayQueueModule.enqueue(1);
-        // ArrayQueueModule.enqueue(2);
-
-        // System.out.println("size = " + ArrayQueueModule.size());
-
-        // dump();
-
-        // System.out.println();
+        System.out.println("ArrayQueueModule size test passed\n\n");
     }
 }

@@ -3,10 +3,17 @@ package queue;
 
 public class ArrayQueueTest {
 
-    public static void fill(ArrayQueue queue) {
-        for (int i = 0; i < 10; i++) {
-            System.out.println("put(" + i + ")");
+    public static void fill(ArrayQueue queue, int n) {
+        for (int i = 0; i < n; i++) {
+            System.out.println("enqueue(" + i + ")");
             queue.enqueue(i);
+        }
+    }
+
+    public static void rfill(ArrayQueue queue, int n) {
+        for (int i = 0; i < n; i++) {
+            System.out.println("push(" + i + ")");
+            queue.push(i);
         }
     }
 
@@ -20,13 +27,35 @@ public class ArrayQueueTest {
         }
     }
 
+    public static void rdump(ArrayQueue queue) {
+        while (!queue.isEmpty()) {
+            System.out.println(
+                "size = " + queue.size() + "\t" +
+                "peek = " + queue.peek() + "\t" +
+                "remove = " + queue.remove()
+            );
+        }
+    }
+
+    public static int size(ArrayQueue queue) {
+        return queue.size();
+    }
+
     public static void main(String[] args) {
         System.out.println("------------- ArrayQueue Test -------------");
 
         ArrayQueue queue = new ArrayQueue();
-        fill(queue);
-        dump(queue);
 
-        System.out.println();
+        fill(queue, 10);
+        assert size(queue) == 10;
+        dump(queue);
+        assert size(queue) == 0;
+
+        rfill(queue, 10);
+        assert size(queue) == 10;
+        rdump(queue);
+        assert size(queue) == 0;
+
+        System.out.println("ArrayQueue size test passed\n\n");
     }
 }

@@ -52,8 +52,8 @@ public class ArrayQueueADT {
         assert element != null;
 
         ensureCapacity(queue, size(queue) + 1);
-        queue.elements[queue.head] = element;
         queue.head = prev(queue, queue.head);
+        queue.elements[queue.head] = element;
     }
 
     public static Object element(ArrayQueueADT queue) {
