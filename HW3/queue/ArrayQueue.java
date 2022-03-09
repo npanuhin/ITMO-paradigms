@@ -16,26 +16,16 @@ public class ArrayQueue {
     }
 
     private void ensureCapacity(int capacity) {
-        int size = size();
-
         if (elements.length - 1 < capacity) {
             Object[] new_elements = new Object[2 * capacity];
 
-            if (tail < head) {
-                for (int i = head; i < elements.length; i++) {
-                    new_elements[i - head] = elements[i];
-                }
-                for (int i = 0; i < tail; i++) {
-                    new_elements[i + (elements.length - head)] = elements[i];
-                }
-            } else {
-                for (int i = head; i < tail; i++) {
-                    new_elements[i - head] = elements[i];
-                }
+            int new_pos = 0;
+            for (int pos = head; pos != tail; pos = next(pos)) {
+                new_elements[new_pos++] = elements[pos];
             }
 
             head = 0;
-            tail = size;
+            tail = new_pos;
             elements = new_elements;
         }
     }

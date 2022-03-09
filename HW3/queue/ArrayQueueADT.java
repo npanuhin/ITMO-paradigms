@@ -16,26 +16,16 @@ public class ArrayQueueADT {
     }
 
     private static void ensureCapacity(ArrayQueueADT queue, int capacity) {
-        int size = size(queue);
-
         if (queue.elements.length - 1 < capacity) {
             Object[] new_elements = new Object[2 * capacity];
 
-            if (queue.tail < queue.head) {
-                for (int i = queue.head; i < queue.elements.length; i++) {
-                    new_elements[i - queue.head] = queue.elements[i];
-                }
-                for (int i = 0; i < queue.tail; i++) {
-                    new_elements[i + (queue.elements.length - queue.head)] = queue.elements[i];
-                }
-            } else {
-                for (int i = queue.head; i < queue.tail; i++) {
-                    new_elements[i - queue.head] = queue.elements[i];
-                }
+            int new_pos = 0;
+            for (int pos = queue.head; pos != queue.tail; pos = next(queue, pos)) {
+                new_elements[new_pos++] = queue.elements[pos];
             }
 
             queue.head = 0;
-            queue.tail = size;
+            queue.tail = new_pos;
             queue.elements = new_elements;
         }
     }
