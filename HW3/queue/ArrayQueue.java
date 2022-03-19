@@ -55,16 +55,16 @@ public class ArrayQueue {
         assert capacity >= 0;
 
         if (elements.length < capacity + 1) {
-            Object[] new_elements = new Object[2 * capacity];
+            Object[] newElements = new Object[2 * capacity];
 
-            int new_pos = 0;
+            int newPos = 0;
             for (int pos = head; pos != tail; pos = next(pos)) {
-                new_elements[new_pos++] = elements[pos];
+                newElements[newPos++] = elements[pos];
             }
 
             head = 0;
-            tail = new_pos;
-            elements = new_elements;
+            tail = newPos;
+            elements = newElements;
         }
     }
 

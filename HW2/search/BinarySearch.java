@@ -25,7 +25,7 @@ public class BinarySearch {
     // Post: Возвращено целое неотрицательное число res (a[i] ∈ ℤ, 0 ≤ a[i] ≤ size(array)) — минимальный индекс, при котором array[res] ≤ x,
     //       или size(array), если ∀ i: array[i] > x
     //
-    public static int binsearch_iterative(final int[] array, final int x) {
+    public static int binsearchIterative(final int[] array, final int x) {
         int left = -1, right = array.length, middle;
 
         // Inv: -1 ≤ left < right ≤ size(array)
@@ -66,7 +66,7 @@ public class BinarySearch {
     // Post: Возвращено целое неотрицательное число res (res ∈ ℤ, left < res ≤ right) — минимальный индекс
     //       из отрезка (left:right), при котором array[res] ≤ x, или size(array), если ∀ i: array[i] > x
     //
-    private static int binsearch_recursive_inner(final int[] array, final int x, final int left, final int right) {
+    private static int binsearchRecursiveInner(final int[] array, final int x, final int left, final int right) {
         // Inv
         if (right - left <= 1) {
             // 0 ≤ right ≤ size(array), т.к. left + 1 = right (right - left = 1) и Inv
@@ -82,10 +82,10 @@ public class BinarySearch {
         // -1 ≤ left ≤ middle < right ≤ size(array)
         if (array[middle] > x) {
             // -1 ≤ left ≤ middle < size(array)
-            return binsearch_recursive_inner(array, x, middle, right);  // (left = middle =>) -1 ≤ middle < right ≤ size(array)
+            return binsearchRecursiveInner(array, x, middle, right);  // (left = middle =>) -1 ≤ middle < right ≤ size(array)
         } else {
             // -1 ≤ middle < right ≤ size(array)
-            return binsearch_recursive_inner(array, x, left, middle);  // (right = middle =>) -1 ≤ left ≤ middle < size(array)
+            return binsearchRecursiveInner(array, x, left, middle);  // (right = middle =>) -1 ≤ left ≤ middle < size(array)
         }
     }
 
@@ -97,8 +97,8 @@ public class BinarySearch {
     // Post: Возвращено целое неотрицательное число res (res ∈ ℤ, 0 ≤ res ≤ size(array)) — минимальный индекс, при котором array[res] ≤ x,
     //       или size(array), если ∀ i: array[i] > x
     //
-    public static int binsearch_recursive(final int[] array, final int x) {
-        return binsearch_recursive_inner(array, x, -1, array.length);
+    public static int binsearchRecursive(final int[] array, final int x) {
+        return binsearchRecursiveInner(array, x, -1, array.length);
     }
 
     // Pred: args — массив строк (возможно пустой, но не null):
@@ -117,7 +117,7 @@ public class BinarySearch {
             array[i] = Integer.parseInt(args[i + 1]);
         }
 
-        System.out.println(binsearch_iterative(array, x));
-        // System.out.println(binsearch_recursive(array, x));
+        System.out.println(binsearchIterative(array, x));
+        // System.out.println(binsearchRecursive(array, x));
     }
 }

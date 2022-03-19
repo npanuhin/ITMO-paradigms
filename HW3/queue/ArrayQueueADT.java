@@ -55,16 +55,16 @@ public class ArrayQueueADT {
         assert capacity >= 0;
 
         if (queue.elements.length - 1 < capacity) {
-            Object[] new_elements = new Object[2 * capacity];
+            Object[] newElements = new Object[2 * capacity];
 
-            int new_pos = 0;
+            int newPos = 0;
             for (int pos = queue.head; pos != queue.tail; pos = next(queue, pos)) {
-                new_elements[new_pos++] = queue.elements[pos];
+                newElements[newPos++] = queue.elements[pos];
             }
 
             queue.head = 0;
-            queue.tail = new_pos;
-            queue.elements = new_elements;
+            queue.tail = newPos;
+            queue.elements = newElements;
         }
     }
 
