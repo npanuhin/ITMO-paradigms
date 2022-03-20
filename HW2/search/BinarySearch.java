@@ -14,7 +14,6 @@
 
 package search;
 
-
 public class BinarySearch {
 
     // Pred: array — массив неубывающих целых чисел (int) (возможно пустой, но не null):

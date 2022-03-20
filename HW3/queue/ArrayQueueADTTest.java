@@ -1,6 +1,5 @@
 package queue;
 
-
 public class ArrayQueueADTTest {
 
     public static void fill(ArrayQueueADT queue, int n) {

@@ -1,4 +1,4 @@
-from shutil import copyfile, rmtree
+import shutil
 import os
 
 
@@ -15,7 +15,7 @@ def removeFromKgeorgiy(path):
         os.remove(mkpath(KGEORGIY_ROOT, path))
 
     elif os.path.isdir(mkpath(KGEORGIY_ROOT, path)):
-        rmtree(mkpath(KGEORGIY_ROOT, path))
+        shutil.rmtree(mkpath(KGEORGIY_ROOT, path))
 
 
 def ext(path):
@@ -33,9 +33,11 @@ def listdir_java(*paths):
 
 
 def copy(src, dst):
+    src = src if isinstance(src, str) else mkpath(*src)
+    dst = dst if isinstance(dst, str) else mkpath(*dst)
     print("Copying {} to {}".format(src, dst))
-    src = mkpath(ROOT, src if isinstance(src, str) else mkpath(*src))
-    dst = mkpath(KGEORGIY_ROOT, dst if isinstance(dst, str) else mkpath(*dst))
+    src = mkpath(ROOT, src)
+    dst = mkpath(KGEORGIY_ROOT, dst)
 
     if not os.path.splitext(dst)[1].strip():
         dirname = dst
@@ -45,23 +47,39 @@ def copy(src, dst):
 
     os.makedirs(dirname, exist_ok=True)
 
-    copyfile(src, dst)
+    shutil.copyfile(src, dst)
+
+
+def copytree(src, dst, preserve=True):
+    src = src if isinstance(src, str) else mkpath(*src)
+    dst = dst if isinstance(dst, str) else mkpath(*dst)
+    print("Copying {} to {}".format(src, dst))
+    src = mkpath(ROOT, src)
+    dst = mkpath(KGEORGIY_ROOT, dst)
+
+    # if os.path.isdir(dst):
+    #     shutil.rmtree(dst)
+
+    shutil.copytree(src, dst, dirs_exist_ok=True)
 
 
 def main():
     removeFromKgeorgiy("java-solutions")
 
-    [copy(("MyClasses", file), ("java-solutions", "myclasses")) for file in listdir_java("MyClasses")]
+    copytree("MyClasses", ("java-solutions", "myclasses"))
 
-    [copy(("HW1", "expression", file), ("java-solutions", "expression")) for file in listdir_java("HW1", "expression")]
-    [copy(("HW1", "expression", "exceptions", file), ("java-solutions", "expression", "exceptions")) for file in listdir_java("HW1", "expression", "exceptions")]
-    [copy(("HW1", "expression", "parser", file), ("java-solutions", "expression", "parser")) for file in listdir_java("HW1", "expression", "parser")]
+    copytree(("HW1", "expression"), ("java-solutions", "expression"))
 
-    [copy(("HW2", "search", file), ("java-solutions", "search")) for file in listdir_java("HW2", "search")]
+    copytree(("HW2", "search"), ("java-solutions", "search"))
 
-    [copy(("HW3", "queue", file), ("java-solutions", "queue")) for file in listdir_java("HW3", "queue")]
+    copytree(("HW3", "queue"), ("java-solutions", "queue"))
+
+    copytree(("HW4", "queue"), ("java-solutions", "queue"))
+
+    copytree(("HW5", "expression"), ("java-solutions", "expression"))
 
     [copy(("HW1", "Main.java"), ("java-solutions"))]
+    [copy(("src", "Question.java"), ("java-solutions"))]
 
 
 if __name__ == "__main__":

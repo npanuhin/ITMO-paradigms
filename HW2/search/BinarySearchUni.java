@@ -8,7 +8,6 @@
 
 package search;
 
-
 public class BinarySearchUni {
 
     // Pred:
