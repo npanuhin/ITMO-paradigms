@@ -1,15 +1,9 @@
 package queue;
 
-import java.util.function.Predicate;
-import java.util.Objects;
-
-
 public class LinkedQueue extends AbstractQueue {
-
     private class Node {
-        Object content;
-        Node prev;
-        Node next;
+        final Object content;
+        Node prev, next;
 
         Node(Object element, Node prev, Node next) {
             this.prev = prev;
@@ -53,13 +47,17 @@ public class LinkedQueue extends AbstractQueue {
 
     @Override
     public void dequeueImp() {
-        if (head.next != null) head.next.prev = null;
+        if (head.next != null) {
+            head.next.prev = null;
+        }
         head = head.next;
     }
 
     @Override
     public void removeImp() {
-        if (tail.prev != null) tail.prev.next = null;
+        if (tail.prev != null) {
+            tail.prev.next = null;
+        }
         tail = tail.prev;
     }
 }

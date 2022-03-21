@@ -1,6 +1,5 @@
 package queue;
 
-import java.util.function.Predicate;
 import java.util.Objects;
 
 /*
@@ -18,13 +17,14 @@ public class ArrayQueue extends AbstractQueue {
     private int head = 0, tail = 0;
 
     // Private Def:
-    //     • prev(i) = (size(elements) - 1) if (index == 0) else (index - 1)
-    //     • next(i) = (index + 1) % size(elements)
+    //     • prev(i) = (size(elements) - 1) if (index == 0) else (index - 1)  циклически-предыдущий индекс
+    //     • next(i) = (index + 1) % size(elements)                           циклически-следующий индекс
 
     // Private model:
     //     • elements — циклический массив элементов a0..a(n - 1)
     //     • head — голова очереди, elements[head] = a0
     //     • tail — невкл. хвост очереди, elements[prev(tail)] = a(n-1)
+    //     • size — размер очереди (= n)
 
     // Private Inv:
     //     • size(elements) >= 1
@@ -74,8 +74,8 @@ public class ArrayQueue extends AbstractQueue {
 
     // Pred: element != null
     // Post:
-    //     • elements[tail] = element              (⇔ a[n] = element)
-    //     • tail' = next(tail)                    (⇔ n += 1)
+    //     • elements[tail] = element            (⇔ a[n] = element)
+    //     • tail' = next(tail)                  (⇔ n += 1)
     @Override
     public void enqueueImp(Object element) {
         ensureCapacity(size + 1);
@@ -85,8 +85,8 @@ public class ArrayQueue extends AbstractQueue {
 
     // Pred: element != null
     // Post:
-    //     • elements[prev(head)] = element        (⇔ a[1:n] = a[0:n-1], a[0] = element)
-    //     • head' = prev(head)                    (⇔ n += 1)
+    //     • elements[prev(head)] = element      (⇔ a[1:n] = a[0:n-1], a[0] = element)
+    //     • head' = prev(head)                  (⇔ n += 1)
     @Override
     public void pushImp(Object element) {
         ensureCapacity(size + 1);
@@ -96,8 +96,7 @@ public class ArrayQueue extends AbstractQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[head]          (⇔ a[0])
+    //      Return: elements[head]               (⇔ a[0])
     @Override
     public Object elementImp() {
         return elements[head];
@@ -105,8 +104,7 @@ public class ArrayQueue extends AbstractQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[prev(tail)]    (⇔ a[n-1])
+    //      Return: elements[prev(tail)]         (⇔ a[n-1])
     @Override
     public Object peekImp() {
         return elements[prev(tail)];
@@ -114,10 +112,8 @@ public class ArrayQueue extends AbstractQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[head]          (⇔ a[0])
-    //         • elements[head] = null             (⇔ del(a[0]) {a[0:n-2] = a[1:n-1], del(a[n-2])})
-    //         • head' = next(head)                (⇔ n -= 1)
+    //      • elements[head] = null              (⇔ del(a[0]) {a[0:n-2] = a[1:n-1], del(a[n-2])})
+    //      • head' = next(head)                 (⇔ n -= 1)
     @Override
     public void dequeueImp() {
         elements[head] = null;
@@ -126,10 +122,8 @@ public class ArrayQueue extends AbstractQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[prev(tail)]    (⇔ a[n-1])
-    //         • elements[prev(tail)] = null       (⇔ del(a[n-1]))
-    //         • tail' = prev(tail)                (⇔ n -= 1)
+    //      • elements[prev(tail)] = null        (⇔ del(a[n-1]))
+    //      • tail' = prev(tail)                 (⇔ n -= 1)
     @Override
     public void removeImp() {
         tail = prev(tail);

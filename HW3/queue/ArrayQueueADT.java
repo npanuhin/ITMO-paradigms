@@ -13,8 +13,8 @@ Inv:
 */
 
 public class ArrayQueueADT {
-    private int head = 0, tail = 0;
     private Object[] elements = new Object[1];
+    private int head = 0, tail = 0;
 
     // Private Def:
     //     • prev(i) = (size(elements) - 1) if (index == 0) else (index - 1)

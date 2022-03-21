@@ -15,15 +15,7 @@ public class Question {
 		else
 			System.out.println(false);
 
-
-		// Question 2:
-		if (true)
-			System.out.println(true);
-		else
-			System.out.println(false);
-
-
-		// Question 4:
+		// Question 3:
 		red = blue = green = 0;
 		System.out.println(!purple[violet = 5]);
 	}

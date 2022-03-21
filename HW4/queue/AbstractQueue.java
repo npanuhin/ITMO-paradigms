@@ -1,7 +1,6 @@
 package queue;
 
 import java.util.function.Predicate;
-import java.util.Objects;
 
 
 public abstract class AbstractQueue implements Queue {
@@ -102,8 +101,8 @@ public abstract class AbstractQueue implements Queue {
         }
 
         if (keep) {
-            while (tmpSize-- > 0) {
-                Object element = dequeue();
+            for (int i = 0; i < tmpSize; i++) {
+                dequeue();
             }
         }
     }

@@ -13,8 +13,8 @@ Inv:
 */
 
 public class ArrayQueueModule {
-    private static int head = 0, tail = 0;
     private static Object[] elements = new Object[1];
+    private static int head = 0, tail = 0;
 
     // Private Def:
     //     • prev(i) = (size(elements) - 1) if (index == 0) else (index - 1)

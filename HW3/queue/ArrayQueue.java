@@ -13,12 +13,12 @@ Inv:
 */
 
 public class ArrayQueue {
-    private int head = 0, tail = 0;
     private Object[] elements = new Object[1];
+    private int head = 0, tail = 0;
 
     // Private Def:
-    //     • prev(i) = (size(elements) - 1) if (index == 0) else (index - 1)
-    //     • next(i) = (index + 1) % size(elements)
+    //     • prev(i) = (size(elements) - 1) if (index == 0) else (index - 1)  циклически-предыдущий индекс
+    //     • next(i) = (index + 1) % size(elements)                           циклически-следующий индекс
 
     // Private model:
     //     • elements — циклический массив элементов a0..a(n - 1)
@@ -62,6 +62,9 @@ public class ArrayQueue {
                 newElements[newPos++] = elements[pos];
             }
 
+            // System.arraycopy(elements, head, newElements, 0, elements.length - head);
+            // System.arraycopy(elements, 0, newElements, elements.length - head, head);
+
             head = 0;
             tail = newPos;
             elements = newElements;
@@ -70,8 +73,8 @@ public class ArrayQueue {
 
     // Pred: element != null
     // Post:
-    //     • elements[tail] = element              (⇔ a[n] = element)
-    //     • tail' = next(tail)                    (⇔ n += 1)
+    //     • elements[tail] = element           (⇔ a[n] = element)
+    //     • tail' = next(tail)                 (⇔ n += 1)
     public void enqueue(Object element) {
         assert element != null;
 
@@ -82,8 +85,8 @@ public class ArrayQueue {
 
     // Pred: element != null
     // Post:
-    //     • elements[prev(head)] = element        (⇔ a[1:n] = a[0:n-1], a[0] = element)
-    //     • head' = prev(head)                    (⇔ n += 1)
+    //     • elements[prev(head)] = element     (⇔ a[1:n] = a[0:n-1], a[0] = element)
+    //     • head' = prev(head)                 (⇔ n += 1)
     public void push(Object element) {
         assert element != null;
 
@@ -94,8 +97,7 @@ public class ArrayQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[head]          (⇔ a[0])
+    //      Return: elements[head]              (⇔ a[0])
     public Object element() {
         assert size() > 0;
 
@@ -104,8 +106,7 @@ public class ArrayQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[prev(tail)]    (⇔ a[n-1])
+    //      Return: elements[prev(tail)]        (⇔ a[n-1])
     public Object peek() {
         assert size() > 0;
 
@@ -114,10 +115,9 @@ public class ArrayQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[head]          (⇔ a[0])
-    //         • elements[head] = null             (⇔ del(a[0]) {a[0:n-2] = a[1:n-1], del(a[n-2])})
-    //         • head' = next(head)                (⇔ n -= 1)
+    //      Return: elements[head]              (⇔ a[0])
+    //      • elements[head] = null             (⇔ del(a[0]) {a[0:n-2] = a[1:n-1], del(a[n-2])})
+    //      • head' = next(head)                (⇔ n -= 1)
     public Object dequeue() {
         assert size() > 0;
 
@@ -129,10 +129,9 @@ public class ArrayQueue {
 
     // Pred: n > 0
     // Post:
-    //      Return: element
-    //         • element = elements[prev(tail)]    (⇔ a[n-1])
-    //         • elements[prev(tail)] = null       (⇔ del(a[n-1]))
-    //         • tail' = prev(tail)                (⇔ n -= 1)
+    //      Return: elements[prev(tail)]        (⇔ a[n-1])
+    //      • elements[prev(tail)] = null       (⇔ del(a[n-1]))
+    //      • tail' = prev(tail)                (⇔ n -= 1)
     public Object remove() {
         assert size() > 0;
 
