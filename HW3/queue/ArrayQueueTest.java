@@ -1,3 +1,5 @@
+// Это задание не проверялось преподавателем, файл может содержать ошибки
+
 package queue;
 
 public class ArrayQueueTest {
