@@ -76,9 +76,9 @@ def main():
 
     copytree(("HW4", "queue"), ("java-solutions", "queue"))
 
-    # copytree(("HW5", "expression"), ("java-solutions", "expression"))
+    copytree(("HW5", "expression"), ("java-solutions", "expression"))
 
-    [copy(("HW1", "Main.java"), ("java-solutions"))]
+    [copy(("HW5", "Main.java"), ("java-solutions"))]
     [copy(("src", "Question.java"), ("java-solutions"))]
 
 
