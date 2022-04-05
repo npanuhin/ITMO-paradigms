@@ -78,8 +78,12 @@ def main():
 
     copytree(("HW5", "expression"), ("java-solutions", "expression"))
 
-    [copy(("HW5", "Main.java"), ("java-solutions"))]
-    [copy(("src", "Question.java"), ("java-solutions"))]
+    copy(("HW5", "Main.java"), ("java-solutions"))
+    copy(("src", "Question.java"), ("java-solutions"))
+
+    copy(("HW6", "functionalExpression.js"), ("javascript-solutions"))
+
+    copy(("HW7", "objectExpression.js"), ("javascript-solutions"))
 
 
 if __name__ == "__main__":
