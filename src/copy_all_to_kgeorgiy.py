@@ -83,7 +83,8 @@ def main():
 
     copy(("HW6", "functionalExpression.js"), ("javascript-solutions"))
 
-    copy(("HW7", "objectExpression.js"), ("javascript-solutions"))
+    # copy(("HW7", "objectExpression.js"), ("javascript-solutions"))
+    copy(("HW8", "objectExpression.js"), ("javascript-solutions"))
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ const CONSTS = {
     "e": e
 };
 
-const variable = (variableName) => (...args) => args[VARS[variableName]];
+const variable = variableName => (...args) => args[VARS[variableName]];
 
 const VARS = {
     "x": 0,

@@ -62,7 +62,7 @@ createExpression(Operation,
         return this.operation(...this.args.map(f => f.evaluate(...params)));
     },
     function() {
-        return this.args.map(f => f.toString()).join(' ') + ' ' + this.operand;
+        return this.args.join(' ') + ' ' + this.operand;
     },
     function(diffVar) {
         return this.diffFunc(diffVar, ...this.args)
@@ -70,14 +70,14 @@ createExpression(Operation,
 );
 
 function createOperation(operand, operation, diffFunc) {
-    const obj = function(...args) {
+    function Obj(...args) {
         Operation.call(this, ...args);
     };
-    obj.prototype = Object.create(Operation.prototype);
-    obj.prototype.operand = operand;
-    obj.prototype.operation = operation;
-    obj.prototype.diffFunc = diffFunc;
-    return obj;
+    Obj.prototype = Object.create(Operation.prototype);
+    Obj.prototype.operand = operand;
+    Obj.prototype.operation = operation;
+    Obj.prototype.diffFunc = diffFunc;
+    return Obj;
 }
 
 const Add = createOperation("+", (a, b) => a + b,
