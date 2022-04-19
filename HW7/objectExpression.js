@@ -59,7 +59,7 @@ function Operation(...args) {
 
 createExpression(Operation,
     function(...params) {
-        return this.operation(...this.args.map(f => f.evaluate(...params)));
+        return this.operation(...this.args.map(x => x.evaluate(...params)));
     },
     function() {
         return this.args.join(' ') + ' ' + this.operand;

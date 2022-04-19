@@ -57,7 +57,7 @@ function Operation(...args) {
 
 createExpression(Operation,
     function(...params) {
-        return this.operation(...this.args.map(f => f.evaluate(...params)));
+        return this.operation(...this.args.map(x => x.evaluate(...params)));
     },
     function() {
         return this.args.join(' ') + ' ' + this.operand;
@@ -66,10 +66,10 @@ createExpression(Operation,
         return this.diffFunc(diffVar, ...this.args)
     },
     function() {
-        return '(' + this.operand + ' ' + this.args.map(f => f.prefix()).join(' ') + ')';
+        return '(' + this.operand + ' ' + this.args.map(x => x.prefix()).join(' ') + ')';
     },
     function() {
-        return '(' + this.args.map(f => f.postfix()).join(' ') + ' ' + this.operand + ')';
+        return '(' + this.args.map(x => x.postfix()).join(' ') + ' ' + this.operand + ')';
     }
 );
 
@@ -162,7 +162,7 @@ const OPERATIONS = {
 
 // RPN parser
 function parse(expression) {
-    let stack = [];
+    const stack = [];
     expression.split(' ').filter(x => x.length).forEach(item => {
         if (item in OPERATIONS) {
             const curOperation = OPERATIONS[item];
@@ -178,6 +178,18 @@ function parse(expression) {
     return stack.pop();
 }
 
+// Main
+const test_expr = new Subtract(
+    new Multiply(
+        new Const(2),
+        new Variable("x")
+    ),
+    new Const(3)
+);
+console.log(test_expr.evaluate(5, 0, 0));
+
+
+// ---------------------------------------------------- Homework 8 -----------------------------------------------------
 
 // Errors
 function ParsingError(message) {
@@ -217,59 +229,59 @@ const MissingArgsError = createParsingError("MissingArgsError",
 
 
 // Parser
-function BaseParser(source, separators = [' ']) {
+function Parser(source, separators) {
     let _pos = 0;
     this.getPos = () => _pos;
-    this.move = (n = 1) => _pos += n;
-    this.next = (n = 1) => source.slice(_pos, _pos += n);
+    this.cur = () => source[_pos];
+    this.next = () => source[_pos++];
+    this.move = (i = 1) => _pos += i;
     this.getSource = () => source;
-    this.isSeparator = c => separators.includes(c);
+    this.isSeparator = () => separators.includes(source[_pos]);
 }
 
-BaseParser.prototype.skipWhitespaces = function() {
-    const source = this.getSource();
-    while (this.getPos() < source.length && source[this.getPos()].trim() === "") {
+Parser.prototype.hasNext = function() {
+    return this.getPos() + 1 <= this.getSource().length;
+};
+
+Parser.prototype.skipWhitespaces = function() {
+    while (this.hasNext() && this.cur() === ' ') {
         this.move();
     }
 };
 
-BaseParser.prototype.expect = function(expectedToken) {
+Parser.prototype.expectToken = function(expectedToken) {
     this.skipWhitespaces();
     return this.getSource().startsWith(expectedToken, this.getPos());
 };
 
-BaseParser.prototype.hasNext = function(n = 1) {
-    return this.getPos() + n <= this.getSource().length;
-};
-
-BaseParser.prototype.parseToken = function() {
+Parser.prototype.parseToken = function() {
     this.skipWhitespaces();
-    const source = this.getSource();
-    if (this.hasNext() && this.isSeparator(source[this.getPos()])) {
+    if (this.hasNext() && this.isSeparator()) {
         return this.next();
-    } else {
-        let token = "";
-        while (this.hasNext() && !(this.isSeparator(source[this.getPos()]))) {
-            token += this.next();
-        }
-        return token;
     }
+    let token = "";
+    while (this.hasNext() && !this.isSeparator()) {
+        token += this.next();
+    }
+    return token;
 };
 
-BaseParser.prototype.getToken = function() {
-    let token = this.parseToken();
+Parser.prototype.getToken = function() {
+    const token = this.parseToken();
     this.move(-token.length);
     return token;
 };
 
 
+const ParsingMode = Object.freeze({PREFIX: "prefix", POSTFIX: "postfix"});
+
 function parseExpression(expression, mode) {
     expression = expression.trim();
-    const parser = new BaseParser(expression, [' ', '(', ')']);
+    const parser = new Parser(expression, [' ', '(', ')']);
 
     function parseToken(token) {
         if (token === '(') {
-            let result = parseExpression();
+            const result = parseExpression();
             token = parser.parseToken();
             if (token !== ')') {
                 throw new MissClosingParenthesisError(parser.getPos(), token);
@@ -286,7 +298,7 @@ function parseExpression(expression, mode) {
 
     function parseArgs() {
         const operationArgs = [];
-        while (parser.hasNext() && !parser.expect(')') && !(parser.getToken() in OPERATIONS)) {
+        while (parser.hasNext() && !parser.expectToken(')') && !(parser.getToken() in OPERATIONS)) {
             operationArgs.push(parseToken(parser.parseToken()))
         }
         return operationArgs;
@@ -294,15 +306,15 @@ function parseExpression(expression, mode) {
 
     function parseOperation() {
         const token = parser.parseToken();
-        if (!(token in OPERATIONS)) {
-            throw new UnknownOperationError(parser.getPos(), token);
+        if (token in OPERATIONS) {
+            return OPERATIONS[token];
         }
-        return OPERATIONS[token];
+        throw new UnknownOperationError(parser.getPos(), token);
     }
 
     function parseExpression() {
         let operationArgs, curOperation;
-        if (mode === "postfix") {
+        if (mode === ParsingMode.POSTFIX) {
             operationArgs = parseArgs();
             curOperation = parseOperation();
         } else {
@@ -311,38 +323,25 @@ function parseExpression(expression, mode) {
         }
         const argsLen = curOperation.prototype.operation.length;
         if (argsLen !== 0 && argsLen !== operationArgs.length) {
-            throw new MissingArgsError(
-                parser.getPos(), curOperation.prototype.operand, operationArgs.length, argsLen
-            );
+            throw new MissingArgsError(parser.getPos(), curOperation.prototype.operand, operationArgs.length, argsLen);
         }
         return new curOperation(...operationArgs);
     }
 
     function parse() {
-        if (expression.length === 0) {
+        if (expression === "") {
             throw new UnknownOperationError(0, "");
         }
-        let result = parseToken(parser.parseToken());
+        const result = parseToken(parser.parseToken());
         if (parser.hasNext()) {
             throw new ParsingError("Unexpected symbols at the end of expression");
-        } else {
-            return result;
         }
+        return result;
     }
 
     return parse();
 }
 
-const parsePostfix = expression => parseExpression(expression, "postfix");
-const parsePrefix = expression => parseExpression(expression, "prefix");
-
-
-// Main
-const test_expr = new Subtract(
-    new Multiply(
-        new Const(2),
-        new Variable("x")
-    ),
-    new Const(3)
-);
-console.log(test_expr.evaluate(5, 0, 0));
+const parsePostfix = expression => parseExpression(expression, ParsingMode.POSTFIX);
+const parsePrefix = expression => parseExpression(expression, ParsingMode.PREFIX);
+// const parsePrefix = parse;
