@@ -289,7 +289,7 @@ function parseExpression(expression, mode) {
             return result;
         } else if (token in VARS) {
             return new Variable(token);
-        } else if (!isNaN(Number(token))) {
+        } else if (token && !isNaN(Number(token))) {
             return new Const(token);
         } else {
             throw new UnexpectedTokenError(parser.getPos(), token);
@@ -329,9 +329,6 @@ function parseExpression(expression, mode) {
     }
 
     function parse() {
-        if (expression === "") {
-            throw new UnknownOperationError(0, "");
-        }
         const result = parseToken(parser.parseToken());
         if (parser.hasNext()) {
             throw new ParsingError("Unexpected symbols at the end of expression");
