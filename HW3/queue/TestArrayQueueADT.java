@@ -2,7 +2,7 @@
 
 package queue;
 
-public class ArrayQueueADTTest {
+public class TestArrayQueueADT {
 
     public static void fill(ArrayQueueADT queue, int n) {
         for (int i = 0; i < n; i++) {

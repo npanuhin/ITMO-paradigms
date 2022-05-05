@@ -1,9 +1,9 @@
 @echo off
 cls
 call "../src/clear_cache"
-javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "../tests/java;../;." "queue/ArrayQueueModuleTest.java"
-javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "../tests/java;../;." "queue/ArrayQueueADTTest.java"
-javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "../tests/java;../;." "queue/ArrayQueueTest.java"
-java -cp "C:\Cache" queue.ArrayQueueModuleTest
-java -cp "C:\Cache" queue.ArrayQueueADTTest
-java -cp "C:\Cache" queue.ArrayQueueTest
+javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "../tests/java;../;." "queue/TestArrayQueueModule.java"
+javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "../tests/java;../;." "queue/TestArrayQueueADT.java"
+javac -cp "C:\Cache" -d "C:\Cache" -sourcepath "../tests/java;../;." "queue/TestArrayQueue.java"
+java -cp "C:\Cache" queue.TestArrayQueueModule
+java -cp "C:\Cache" queue.TestArrayQueueADT
+java -cp "C:\Cache" queue.TestArrayQueue
