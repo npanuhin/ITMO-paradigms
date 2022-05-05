@@ -86,6 +86,8 @@ def main():
     # copy(("HW7", "objectExpression.js"), ("javascript-solutions"))
     copy(("HW8", "objectExpression.js"), ("javascript-solutions"))
 
+    copy(("HW9", "linear.clj"), ("clojure-solutions"))
+
 
 if __name__ == "__main__":
     main()
