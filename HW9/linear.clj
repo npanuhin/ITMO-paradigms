@@ -2,7 +2,7 @@
 
 (defn check-vector? [elements]
   (and (every? vector? elements)
-       (apply == (mapv count elements))))
+       (apply == (map count elements))))
 
 (defn check-num-vector? [elements]
   (and (vector? elements)
@@ -15,7 +15,7 @@
 (defn check-matrix? [elements]
   (and (every? vector? elements)
        (every? check-num-matrix? elements)
-       (apply == (mapv count elements))))
+       (apply == (map count elements))))
 
 (defn element-op [f checkFunc]
   (fn [& elements]
@@ -40,7 +40,7 @@
 (defn vect [& vectors]
   {:pre [(and
            (every? check-num-vector? vectors)
-           (apply == 3 (mapv count vectors)))]}
+           (apply == 3 (map count vectors)))]}
   (reduce vect-bin vectors))
 
 (defn v*s [v & scalars]
@@ -73,7 +73,7 @@
 (defn m*m2 [m1 m2]
   {:pre [(== (count (first m1)) (count m2))]}
   (let [m2 (transpose m2)]
-    (transpose (mapv #(m*v m1 %) m2))))
+    (transpose (map #(m*v m1 %) m2))))
 
 (defn m*m [& matrixes]
   {:pre [(every? check-num-matrix? matrixes)]}
@@ -83,7 +83,7 @@
   (cond
     (number? tensor) ()
     (vector? tensor) (let [sh (shape (first tensor))]
-                       (if (apply = sh (mapv shape (rest tensor)))
+                       (if (apply = sh (map shape (rest tensor)))
                          (cons (count tensor) sh)))))
 
 (defn check-tensor? [elements]
@@ -91,7 +91,7 @@
 
 ; :NOTE: reduce
 (defn copy-tensor [sh copy-end element]
-  (letfn [(rep [f] (mapv f (repeat (first sh) element)))]
+  (letfn [(rep [f] (map f (repeat (first sh) element)))]
     (cond
       (> (count sh) (+ copy-end 1)) (rep #(copy-tensor (rest sh) copy-end %))
       (empty? sh) element
