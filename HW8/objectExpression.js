@@ -116,14 +116,14 @@ const Negate = createOperation("negate", a => -a,
 
 const Gauss = createOperation("gauss", (a, b, c, x) => a * Math.exp(-((x - b) * (x - b)) / (2 * c * c)),
     (diffVar, a, b, c, x) => {
-        const substr = new Subtract(x, b);
+        const subtr = new Subtract(x, b);
         return new Add(
             new Gauss(a.diff(diffVar), b, c, x),
             new Multiply(
                 new Gauss(a, b, c, x),
                 new Negate(
                     new Divide(
-                        new Multiply(substr, substr),
+                        new Multiply(subtr, subtr),
                         new Multiply(
                             Const.TWO,
                             new Multiply(c, c)
