@@ -14,9 +14,9 @@ function Const(value) {
     this.value = value;
 }
 
-Const.ZERO = new Const(0);
-Const.ONE = new Const(1);
-Const.TWO = new Const(2);
+const ZERO = new Const(0);
+const ONE = new Const(1);
+const TWO = new Const(2);
 
 createExpression(Const,
     function() {
@@ -25,7 +25,7 @@ createExpression(Const,
     function() {
         return String(this.value);
     },
-    () => Const.ZERO
+    () => ZERO
 );
 
 const VARS = {
@@ -47,7 +47,7 @@ createExpression(Variable,
         return this.varName;
     },
     function(diffVar) {
-        return this.varName === diffVar ? Const.ONE : Const.ZERO;
+        return this.varName === diffVar ? ONE : ZERO;
     }
 );
 
@@ -125,7 +125,7 @@ const Gauss = createOperation("gauss", (a, b, c, x) => a * Math.exp(-((x - b) * 
                     new Divide(
                         new Multiply(subtr, subtr),
                         new Multiply(
-                            Const.TWO,
+                            TWO,
                             new Multiply(c, c)
                         )
                     )
@@ -139,12 +139,12 @@ const Exp = createOperation(null, a => Math.exp(a),
     (diffVar, a) => new Multiply(a.diff(diffVar), new Exp(a))
 );
 
-const sumexp = args => args.reduce((a, b) => a + Math.exp(b), 0)
-const Sumexp = createOperation("sumexp", (...args) => sumexp(args),
-    (diffVar, ...args) => args.reduce((sum, operation) => new Add(sum, (new Exp(operation)).diff(diffVar)), Const.ZERO)
+const sumexp = (...args) => args.reduce((a, b) => a + Math.exp(b), 0);
+const Sumexp = createOperation("sumexp", sumexp,
+    (diffVar, ...args) => args.reduce((a, b) => new Add(a, (new Exp(b)).diff(diffVar)), ZERO)
 );
 
-const Softmax = createOperation("softmax", (...args) => Math.exp(args[0]) / sumexp(args),
+const Softmax = createOperation("softmax", (...args) => Math.exp(args[0]) / sumexp(...args),
     (diffVar, ...args) => (new Divide(new Exp(args[0]), new Sumexp(...args))).diff(diffVar)
 );
 
@@ -179,14 +179,14 @@ function parse(expression) {
 }
 
 // Main
-const test_expr = new Subtract(
-    new Multiply(
-        new Const(2),
-        new Variable("x")
-    ),
-    new Const(3)
-);
-console.log(test_expr.evaluate(5, 0, 0));
+// const test_expr = new Subtract(
+//     new Multiply(
+//         new Const(2),
+//         new Variable("x")
+//     ),
+//     new Const(3)
+// );
+// console.log(test_expr.evaluate(5, 0, 0));
 
 
 // ---------------------------------------------------- Homework 8 -----------------------------------------------------
@@ -211,85 +211,121 @@ function createParsingError(name, buildMessage) {
 }
 
 const MissClosingParenthesisError = createParsingError("MissClosingParenthesisError",
-    (pos, foundToken) => `Expected ) at pos ${pos} but found ${foundToken}`
+    (pos, foundToken) => "Expected ) at pos " + pos
 );
 
 const UnknownOperationError = createParsingError("UnknownOperationError",
-    (pos, foundToken) => `Invalid operation token at pos ${pos}, found ${foundToken}`
+    (pos, foundToken) => "Invalid operation token at pos " + pos + ", found " + foundToken
 );
 
 const UnexpectedTokenError = createParsingError("UnexpectedTokenError",
-    (pos, foundToken) => `Unexpected token ${foundToken} at pos ${pos}`
+    (pos, foundToken) => "Unexpected token " + foundToken + " at pos " + pos
 );
 
 const MissingArgsError = createParsingError("MissingArgsError",
     (pos, operand, foundCount, expectedCount) =>
-    `Expected ${expectedCount} arguments for operation ${operand} at pos ${pos} but found ${foundCount}`
+    "Expected " + expectedCount + " arguments for operation " + operand + " at pos " + pos + " but found " + foundCount
 );
 
 
+const SEPARATORS = [' ', '(', ')'];
+
 // Parser
-function Parser(source, separators) {
-    let _pos = 0;
+function Parser(source) {
+    let _pos = 0, length = source.length;
     this.getPos = () => _pos;
-    this.cur = () => source[_pos];
-    this.next = () => source[_pos++];
-    this.move = (i = 1) => _pos += i;
-    this.getSource = () => source;
-    this.isSeparator = () => separators.includes(source[_pos]);
+    // this.cur = () => source[_pos];
+    // this.next = () => source[_pos++];
+    // this.move = (i = 1) => _pos += i;
+    // this.length = () => source.length;
+    this.hasNext = () => _pos < length;
+
+    // Следующие функции перененесены из прототипа для увеличения скорости, не делайте так
+
+    this.skipWhitespaces = () => {
+        while (_pos < length && source[_pos] === ' ') {
+            _pos++;
+        }
+    }
+    this.expectChar = (expectedChar) => {
+        this.skipWhitespaces();
+        return source[_pos] === expectedChar;
+    };
+
+    this.parseToken = () => {
+        this.skipWhitespaces();
+        let token = source[_pos++];
+        if (SEPARATORS.includes(token)) {
+            return token;
+        }
+        while (_pos < length && !SEPARATORS.includes(source[_pos])) {
+            token += source[_pos++];
+        }
+        return token;
+    }
+    this.getToken = function() {
+        const token = this.parseToken();
+        _pos -= token.length;
+        return token;
+    }
 }
 
-Parser.prototype.hasNext = function() {
-    return this.getPos() + 1 <= this.getSource().length;
-};
+// Parser.prototype.hasNext = function() {
+//     return this.getPos() < this.length();
+// };
 
-Parser.prototype.skipWhitespaces = function() {
-    while (this.hasNext() && this.cur() === ' ') {
-        this.move();
-    }
-};
+// Parser.prototype.skipWhitespaces = function() {
+//     while (this.hasNext() && this.cur() === ' ') {
+//         this.move();
+//     }
+// };
 
-Parser.prototype.expectToken = function(expectedToken) {
-    this.skipWhitespaces();
-    return this.getSource().startsWith(expectedToken, this.getPos());
-};
+// Parser.prototype.expectChar = function(expectedChar) {
+//     this.skipWhitespaces();
+//     return this.cur() === expectedChar;
+// };
 
-Parser.prototype.parseToken = function() {
-    this.skipWhitespaces();
-    if (this.hasNext() && this.isSeparator()) {
-        return this.next();
-    }
-    let token = "";
-    while (this.hasNext() && !this.isSeparator()) {
-        token += this.next();
-    }
-    return token;
-};
+// Parser.prototype.parseToken = function() {
+//     this.skipWhitespaces();
+//     let token = this.next();
+//     if (SEPARATORS.includes(token)) {
+//         return token;
+//     }
+//     while (this.hasNext() && !SEPARATORS.includes(this.cur())) {
+//         token += this.next();
+//     }
+//     return token;
+// };
 
-Parser.prototype.getToken = function() {
-    const token = this.parseToken();
-    this.move(-token.length);
-    return token;
-};
+// Parser.prototype.getToken = function() {
+//     const token = this.parseToken();
+//     this.move(-token.length);
+//     return token;
+// };
 
 
 const ParsingMode = Object.freeze({PREFIX: "prefix", POSTFIX: "postfix"});
 
 function parseExpression(expression, mode) {
     expression = expression.trim();
-    const parser = new Parser(expression, [' ', '(', ')']);
+    const parser = new Parser(expression);
+    let isPostfix;
+    if (mode === ParsingMode.POSTFIX) {
+        isPostfix = true;
+    } else {
+        isPostfix = false;
+    }
 
     function parseToken(token) {
         if (token === '(') {
             const result = parseExpression();
-            token = parser.parseToken();
-            if (token !== ')') {
-                throw new MissClosingParenthesisError(parser.getPos(), token);
+            if (parser.parseToken() !== ')') {
+                throw new MissClosingParenthesisError(parser.getPos());
             }
             return result;
         } else if (token in VARS) {
             return new Variable(token);
-        } else if (token && !isNaN(Number(token))) {
+        } else if (!isNaN(Number(token))) {
             return new Const(token);
         } else {
             throw new UnexpectedTokenError(parser.getPos(), token);
@@ -298,23 +334,25 @@ function parseExpression(expression, mode) {
 
     function parseArgs() {
         const operationArgs = [];
-        while (parser.hasNext() && !parser.expectToken(')') && !(parser.getToken() in OPERATIONS)) {
-            operationArgs.push(parseToken(parser.parseToken()))
+        parser.skipWhitespaces();
+        while (parser.hasNext() && !parser.expectChar(')') && !(parser.getToken() in OPERATIONS)) {
+            operationArgs.push(parseToken(parser.parseToken()));
+            parser.skipWhitespaces();
         }
         return operationArgs;
     }
 
     function parseOperation() {
         const token = parser.parseToken();
-        if (token in OPERATIONS) {
-            return OPERATIONS[token];
+        if (!(token in OPERATIONS)) {
+            throw new UnknownOperationError(parser.getPos(), token);
         }
-        throw new UnknownOperationError(parser.getPos(), token);
+        return OPERATIONS[token];
     }
 
     function parseExpression() {
         let operationArgs, curOperation;
-        if (mode === ParsingMode.POSTFIX) {
+        if (isPostfix) {
             operationArgs = parseArgs();
             curOperation = parseOperation();
         } else {
