@@ -87,7 +87,8 @@ def main():
 
     copy(("HW9", "linear.clj"), ("clojure-solutions"))
 
-    copy(("HW10", "expression.clj"), ("clojure-solutions"))
+    # copy(("HW10", "expression.clj"), ("clojure-solutions"))
+    copy(("HW11", "expression.clj"), ("clojure-solutions"))
 
 
 if __name__ == "__main__":
