@@ -1,3 +1,5 @@
+(load-file "proto.clj")
+
 (defn abstractOperation [f] (fn [& args] (fn [vars] (apply f (map #(% vars) args)))))
 
 (def constant constantly)
@@ -12,7 +14,7 @@
   ([frst & args] (/ (double frst) (reduce * args))))
 (def divide (abstractOperation divide-imp))
 
-(defn sumexp-imp [& args] (reduce + (map (fn [x] (Math/exp x)) args)))
+(defn sumexp-imp [& args] (reduce + (map #(Math/exp %) args)))
 (def sumexp (abstractOperation sumexp-imp))
 
 (defn softmax-imp [& args] (/ (Math/exp (first args)) (apply sumexp-imp args)))
@@ -37,9 +39,7 @@
 (defn parseFunction [expression] (parse OperantionFunctions constant variable (read-string expression)))
 
 
-; ----------------------------- HW 11 -----------------------------
-
-(load-file "proto.clj")
+; ------------------------------ HW 11 ------------------------------
 
 (defn diff [expr target]
   ((proto-get expr :diff) expr target))
@@ -53,7 +53,7 @@
 (defn AbstractOperationPrototype [f sign f_diff] {
   :diff f_diff
   :toString (fn [this] (str "(" sign " " (clojure.string/join " " (mapv toString (this :operands))) ")"))
-  :evaluate (fn [this args] (apply f (mapv (fn [x] (evaluate x args)) (this :operands))))
+  :evaluate (fn [this args] (apply f (mapv #(evaluate % args) (this :operands))))
   })
 
 (defn AbstractOperation [f sign f_diff]
@@ -75,10 +75,10 @@
   })
 
 (def Add (AbstractOperation + "+" (fn [this target]
-  (apply Add (map (fn [x] (diff x target)) (operands this))))))
+  (apply Add (map #(diff % target) (operands this))))))
 
 (def Subtract (AbstractOperation - "-" (fn [this target]
-  (apply Subtract (map (fn [x] (diff x target)) (operands this))))))
+  (apply Subtract (map #(diff % target) (operands this))))))
 
 (def Multiply (AbstractOperation * "*" (fn [this target]
   (apply Add (mapv
@@ -101,7 +101,7 @@
           (Multiply (first args) (diff (nth args i) target))
           (Multiply (nth args i) (apply Multiply (rest args)))))))))))
 
-(def Exp (AbstractOperation (fn [x] (Math/exp x)) nil (fn [this target]
+(def Exp (AbstractOperation #(Math/exp %) nil (fn [this target]
   (let [x (first (operands this))]
     (Multiply (diff x target) (Exp x))))))
 

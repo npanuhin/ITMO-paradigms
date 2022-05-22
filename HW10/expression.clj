@@ -10,7 +10,7 @@
   ([arg] (/ 1 (double arg)))
   ([frst & args] (/ (double frst) (reduce * args))))))
 
-(defn sumexp-imp [& args] (reduce + (map (fn [x] (Math/exp x)) args)))
+(defn sumexp-imp [& args] (reduce + (map #(Math/exp %) args)))
 (def sumexp (abstractOperation sumexp-imp))
 (def softmax (abstractOperation (fn [& args] (/ (Math/exp (first args)) (apply sumexp-imp args)))))
 
