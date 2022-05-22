@@ -39,68 +39,61 @@
 
 ; ----------------------------- HW 11 -----------------------------
 
-(defn proto_get [this key]
-  (if (contains? this key)
-    (this key)
-    (recur (this :prototype) key)))
+(load-file "proto.clj")
 
 (defn diff [expr target]
-  ((proto_get expr :diff) expr target))
+  ((proto-get expr :diff) expr target))
 (defn toString [expr]
-  ((proto_get expr :toString) expr))
+  ((proto-get expr :toString) expr))
 (defn evaluate [expr args]
-  ((proto_get expr :evaluate) expr args))
+  ((proto-get expr :evaluate) expr args))
 
-(def operands (fn [this] (proto_get this :operands)))
+(def operands (fn [this] (proto-get this :operands)))
 
-(def AbstractOpProto {
-  :toString (fn [this]
-    (str
-      "("
-      (this :sign)
-      (if (empty? (this :operands)) (str " ") (apply str (mapv (fn [x] (str " " (toString x))) (this :operands))))
-      ")"))
-  :evaluate (fn [this args] (apply (this :func) (mapv (fn [x] (evaluate x args)) (this :operands))))})
+(defn AbstractOperationPrototype [f sign f_diff] {
+  :diff f_diff
+  :toString (fn [this] (str "(" sign " " (clojure.string/join " " (mapv toString (this :operands))) ")"))
+  :evaluate (fn [this args] (apply f (mapv (fn [x] (evaluate x args)) (this :operands))))
+  })
 
-(defn AbstractOp [f sign f_diff]
+(defn AbstractOperation [f sign f_diff]
   (let [this {
-    :prototype AbstractOpProto
-    :func f
-    :sign sign 
-    :diff f_diff
+    :prototype (AbstractOperationPrototype f sign f_diff)
     }]
     (fn [& args] (assoc this :operands args))))
 
 (defn Constant [x] {
+  :diff     (fn [this target] (Constant 0))
   :evaluate (fn [this args] x)
   :toString (fn [& args] (format "%.01f" (double x)))
-  :diff     (fn [this target] (Constant 0))
   })
 
 (defn Variable [x] {
+  :diff     (fn [this target] (if (identical? target x) (Constant 1) (Constant 0)))
   :evaluate (fn [this args] (get args x))
   :toString (fn [& args] (str x))
-  :diff     (fn [this target] (if (identical? target x) (Constant 1) (Constant 0)))
   })
 
-(def Add (AbstractOp + "+" (fn [this target]
+(def Add (AbstractOperation + "+" (fn [this target]
   (apply Add (map (fn [x] (diff x target)) (operands this))))))
 
-(def Subtract (AbstractOp - "-" (fn [this target]
+(def Subtract (AbstractOperation - "-" (fn [this target]
   (apply Subtract (map (fn [x] (diff x target)) (operands this))))))
 
-(def Multiply (AbstractOp * "*" (fn [this target]
+(def Multiply (AbstractOperation * "*" (fn [this target]
   (apply Add (mapv
     (fn [x] (apply Multiply (mapv (fn [y] (if (identical? x y) (diff x target) y)) (operands this))))
     (operands this))))))
 
-(def Negate (AbstractOp - "negate" (fn [this target]
-  (let [x (first (operands this))] (Negate (diff x target))))))
+(def Negate (AbstractOperation - "negate" (fn [this target]
+  (let [x (first (operands this))]
+    (Negate (diff x target))))))
 
 (defn single-elem? [s] (and (seq s) (empty? (rest s))))
-(def Divide (AbstractOp divide-imp "/" (fn [this target]
+(def Divide (AbstractOperation divide-imp "/" (fn [this target]
   (if (single-elem? (operands this))
-    (let [x (first (operands this))] (Divide (Negate (diff x target)) (Multiply x x)))
+    (let [x (first (operands this))]
+      (Divide (Negate (diff x target)) (Multiply x x)))
 
     (let [args (operands this)]
       (apply Subtract (for [i (range (count args))]
@@ -108,26 +101,27 @@
           (Multiply (first args) (diff (nth args i) target))
           (Multiply (nth args i) (apply Multiply (rest args)))))))))))
 
-(def Exp (AbstractOp (fn [x] (Math/exp x)) nil (fn [this target]
-  (let [x (first (operands this))] (Multiply (diff x target) (Exp x))))))
+(def Exp (AbstractOperation (fn [x] (Math/exp x)) nil (fn [this target]
+  (let [x (first (operands this))]
+    (Multiply (diff x target) (Exp x))))))
 
-(def Sumexp (AbstractOp sumexp-imp "sumexp" (fn [this target]
+(def Sumexp (AbstractOperation sumexp-imp "sumexp" (fn [this target]
   (let [args (operands this)]
     (apply Add (for [i (range (count args))]
       (diff (Exp (nth args i)) target)))))))
 
-(def Softmax (AbstractOp softmax-imp "softmax" (fn [this target]
+(def Softmax (AbstractOperation softmax-imp "softmax" (fn [this target]
   (let [args (operands this)]
     (diff (Divide (Exp (first args)) (apply Sumexp args)) target)))))
 
-(def OperationObjects
-  {'+       Add
-   '-       Subtract
-   '*       Multiply
-   '/       Divide
-   'negate  Negate
-   'sumexp  Sumexp
-   'softmax Softmax
+(def OperationObjects {
+  '+       Add
+  '-       Subtract
+  '*       Multiply
+  '/       Divide
+  'negate  Negate
+  'sumexp  Sumexp
+  'softmax Softmax
   })
 
 (defn parseObject [expr] (parse OperationObjects Constant Variable (read-string expr)))
