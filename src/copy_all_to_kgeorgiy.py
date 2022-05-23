@@ -65,6 +65,8 @@ def copytree(src, dst, preserve=True):
 
 def main():
     removeFromKgeorgiy("java-solutions")
+    removeFromKgeorgiy("javascript-solutions")
+    removeFromKgeorgiy("clojure-solutions")
 
     copytree("MyClasses", ("java-solutions", "myclasses"))
 
@@ -88,7 +90,13 @@ def main():
     copy(("HW9", "linear.clj"), ("clojure-solutions"))
 
     # copy(("HW10", "expression.clj"), ("clojure-solutions"))
+
     copy(("HW11", "expression.clj"), ("clojure-solutions"))
+    copy(("HW11", "proto.clj"), ("clojure-solutions"))
+
+    # copy(("HW12", "expression.clj"), ("clojure-solutions"))
+    # copy(("HW12", "proto.clj"), ("clojure-solutions"))
+    # copy(("HW12", "parser.clj"), ("clojure-solutions"))
 
 
 if __name__ == "__main__":
