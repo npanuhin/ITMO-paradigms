@@ -1,260 +1,186 @@
-(load-file "proto.clj")
+(definterface IOperation
+              (^Number evaluate [cur_vars])
+              (^String toString [])
+              (^String toStringInfix [])
+              (diff [cur_var]))
 
-(defn abstractOperation [f] (fn [& args] (fn [vars] (apply f (map #(% vars) args)))))
+(declare ZERO)
+(declare ONE)
 
-(def constant constantly)
-(defn variable [name] (fn [vars] (vars name)))
-(def add (abstractOperation +))
-(def subtract (abstractOperation -))
-(def multiply (abstractOperation *))
-(def negate (abstractOperation -))
+(deftype abstractTerminal[evaluate toString diff value]
+         IOperation
+         (evaluate [this cur_vars] (evaluate value cur_vars))
+         (toString [this] (toString value))
+         (toStringInfix [this] (toString value))
+         (diff [this cur_var] (diff value cur_var)))
 
-(defn divide-imp
-  ([arg] (/ 1 (double arg)))
-  ([frst & args] (/ (double frst) (reduce * args))))
-(def divide (abstractOperation divide-imp))
+(defn createTerminal [evaluate toString diff]
+      #(abstractTerminal. evaluate toString diff %))
 
-(defn sumexp-imp [& args] (reduce + (map #(Math/exp %) args)))
-(def sumexp (abstractOperation sumexp-imp))
+(def Constant
+  (createTerminal
+    (fn [a b] a)
+    #(format "%.1f" (double %))
+    (fn [a b] ZERO)))
 
-(defn softmax-imp [& args] (/ (Math/exp (first args)) (apply sumexp-imp args)))
-(def softmax (abstractOperation softmax-imp))
+(def Variable
+  (createTerminal
+    #(%2 %1)
+    (fn [a] a)
+    (fn [a b] (if (= a b) ONE ZERO))))
 
-(def OperantionFunctions {
-  '+       add
-  '-       subtract
-  '*       multiply
-  '/       divide
-  'negate  negate
-  'sumexp  sumexp
-  'softmax softmax
-  })
+(def ZERO (Constant 0))
+(def ONE (Constant 1))
 
-(defn parse [operationType const-imp var-imp expr]
-  (cond
-    (seq? expr)    (apply (operationType (first expr)) (map #(parse operationType const-imp var-imp %) (rest expr)))
-    (number? expr) (const-imp (double expr))
-    (symbol? expr) (var-imp (str expr))))
+(deftype abstractExpression [func sign dff args]
+         IOperation
+         (evaluate [this cur_vars] (apply func (mapv #(.evaluate % cur_vars) args)))
+         (toString [this] (str "(" sign " " (clojure.string/join " " (mapv #(.toString %) args)) ")"))
+         (toStringInfix [this] (if (= (count args) 1) (str sign "(" (.toStringInfix (first args)) ")")
+                                                      (str "(" (clojure.string/join (str " " sign " ") (map #(.toStringInfix %) args)) ")")))
+         (diff [this cur_var] (dff (vector args (mapv #(.diff % cur_var) args)))))
 
-(defn parseFunction [expression] (parse OperantionFunctions constant variable (read-string expression)))
+(defn createExpression [func sign dff]
+      #(abstractExpression. func sign dff %&))
 
+(defn simpleDiff [func]
+      (letfn [(createDiff [func [args diffArgs]] (apply func diffArgs))]
+             (partial createDiff func)))
 
-; ------------------------------ HW 11 ------------------------------
+(def Add
+  (createExpression +
+                    "+"
+                    (simpleDiff #(apply Add %&))))
+(def Subtract
+  (createExpression -
+                    "-"
+                    (simpleDiff #(apply Subtract %&))))
+(def Negate
+  (createExpression -
+                    "negate"
+                    (simpleDiff #(apply Negate %&))))
+(def Multiply
+  (createExpression *
+                    "*"
+                    (fn [[args diffArgs]] (second
+                                            (reduce (fn [[exprX exprDX] [x dx]]
+                                                        (vector (Multiply exprX x)
+                                                                (Add (Multiply exprX dx) (Multiply exprDX x))))
+                                                    (mapv vector args diffArgs))))))
+(def Divide
+  (createExpression (fn [a & args] (/ (double a) (apply * args)))
+                    "/"
+                    (fn [[args diffArgs]] (Divide (second
+                                                    (reduce (fn [[exprX exprDX] [x dx]]
+                                                                (vector (Multiply exprX x)
+                                                                        (Subtract (Multiply exprDX x) (Multiply exprX dx))))
+                                                            (mapv vector args diffArgs)))
+                                                  (Multiply (apply Multiply (rest args))
+                                                            (apply Multiply (rest args)))))))
+(def Sum
+  (createExpression +
+                    "sum"
+                    (simpleDiff #(apply Sum %&))))
+(def Avg
+  (createExpression (fn [& args] (/ (apply + args) (count args)))
+                    "avg"
+                    (fn [[args diffArgs]] (Divide (apply Sum diffArgs)
+                                                  (Constant (count args))))))
+(def Pow
+  (createExpression #(Math/pow %1 %2)
+                    "**"
+                    nil))
+(def Log
+  (createExpression #(/ (Math/log (Math/abs %2))
+                        (Math/log (Math/abs %1)))
+                    "//"
+                    nil))
 
-(defn diff [expr target]
-  ((proto-get expr :diff) expr target))
-(defn toString [expr]
-  ((proto-get expr :toString) expr))
-(defn evaluate [expr args]
-  ((proto-get expr :evaluate) expr args))
+(def str-to-obj {'+      Add
+                 '-      Subtract
+                 '*      Multiply
+                 '/      Divide
+                 'negate Negate
+                 'sum    Sum
+                 'avg    Avg})
 
-(def operands (fn [this] (proto-get this :operands)))
+(defn evaluate [a cur_var] (.evaluate a cur_var))
+(defn toString [a] (.toString a))
+(defn toStringInfix [a] (.toStringInfix a))
+(defn diff [a cur_var] (.diff a cur_var))
 
-(defn AbstractOperationPrototype [f sign f_diff] {
-  :diff f_diff
-  :toString (fn [this] (str "(" sign " " (clojure.string/join " " (mapv toString (this :operands))) ")"))
-  :evaluate (fn [this args] (apply f (mapv #(evaluate % args) (this :operands))))
-  })
+(defn parse [str-to-expr cur-const cur-variable]
+      (fn [stringExpression]
+          (letfn [(parseExpression [expression]
+                                   (cond (number? expression) (cur-const expression)
+                                         (symbol? expression) (cur-variable (str expression))
+                                         :else (apply (str-to-expr (first expression))
+                                                      (mapv parseExpression (rest expression)))))
+                  ] (parseExpression (read-string stringExpression)))))
 
-(defn AbstractOperation [f sign f_diff]
-  (let [this {
-    :prototype (AbstractOperationPrototype f sign f_diff)
-    }]
-    (fn [& args] (assoc this :operands args))))
+; (def parseFunction (parse str-to-func constant variable))
+(def parseObject (parse str-to-obj Constant Variable))
 
-(defn Constant [x] {
-  :diff     (fn [this target] (Constant 0))
-  :evaluate (fn [this args] x)
-  :toString (fn [& args] (format "%.01f" (double x)))
-  })
+;HW12
+(load-file "parser.clj")
 
-(defn Variable [x] {
-  :diff     (fn [this target] (if (identical? target x) (Constant 1) (Constant 0)))
-  :evaluate (fn [this args] (get args x))
-  :toString (fn [& args] (str x))
-  })
-
-(def Add (AbstractOperation + "+" (fn [this target]
-  (apply Add (map #(diff % target) (operands this))))))
-
-(def Subtract (AbstractOperation - "-" (fn [this target]
-  (apply Subtract (map #(diff % target) (operands this))))))
-
-(def Multiply (AbstractOperation * "*" (fn [this target]
-  (apply Add (mapv
-    (fn [x] (apply Multiply (mapv (fn [y] (if (identical? x y) (diff x target) y)) (operands this))))
-    (operands this))))))
-
-(def Negate (AbstractOperation - "negate" (fn [this target]
-  (let [x (first (operands this))]
-    (Negate (diff x target))))))
-
-(defn single-elem? [s] (and (seq s) (empty? (rest s))))
-(def Divide (AbstractOperation divide-imp "/" (fn [this target]
-  (if (single-elem? (operands this))
-    (let [x (first (operands this))]
-      (Divide (Negate (diff x target)) (Multiply x x)))
-
-    (let [args (operands this)]
-      (apply Subtract (for [i (range (count args))]
-        (Divide
-          (Multiply (first args) (diff (nth args i) target))
-          (Multiply (nth args i) (apply Multiply (rest args)))))))))))
-
-(def Exp (AbstractOperation #(Math/exp %) nil (fn [this target]
-  (let [x (first (operands this))]
-    (Multiply (diff x target) (Exp x))))))
-
-(def Sumexp (AbstractOperation sumexp-imp "sumexp" (fn [this target]
-  (let [args (operands this)]
-    (apply Add (for [i (range (count args))]
-      (diff (Exp (nth args i)) target)))))))
-
-(def Softmax (AbstractOperation softmax-imp "softmax" (fn [this target]
-  (let [args (operands this)]
-    (diff (Divide (Exp (first args)) (apply Sumexp args)) target)))))
-
-(def OperationObjects {
-  '+       Add
-  '-       Subtract
-  '*       Multiply
-  '/       Divide
-  'negate  Negate
-  'sumexp  Sumexp
-  'softmax Softmax
-  })
-
-(defn parseObject [expr] (parse OperationObjects Constant Variable (read-string expr)))
-
-
-
-; Combinatorial parser
-
-
-(defn -return [value tail] {:value value :tail tail})
-(def -valid? boolean)
-(def -value :value)
-(def -tail :tail)
-
-(defn _show [result]
-  (if (-valid? result) (str "-> " (pr-str (-value result)) " | " (pr-str (apply str (-tail result))))
-                       "!"))
-(defn tabulate [parser inputs]
-  (run! (fn [input] (printf "    %-10s %s\n" (pr-str input) (_show (parser input)))) inputs))
-
-
-(defn _empty [value] (partial -return value))
-(defn _char [p]
-  (fn [[c & cs]]
-    (if (and c (p c)) (-return c cs))))
-(defn _map [f result]
-  (if (-valid? result)
-    (-return (f (-value result)) (-tail result))))
-
-(defn _combine [f a b]
-  (fn [str]
-    (let [ar ((force a) str)]
-      (if (-valid? ar)
-        (_map (partial f (-value ar))
-              ((force b) (-tail ar)))))))
-
-(defn _either [a b]
-  (fn [str]
-    (let [ar ((force a) str)]
-      (if (-valid? ar) ar ((force b) str)))))
-
-(defn _parser [p]
-  (fn [input]
-    (-value ((_combine (fn [v _] v) p (_char #{\u0000})) (str input \u0000)))))
-
-(defn +char [chars] (_char (set chars)))
-
-(defn +char-not [chars] (_char (comp not (set chars))))
-
-(defn +map [f parser] (comp (partial _map f) parser))
-
-(def +parser _parser)
-
-(def +ignore (partial +map (constantly 'ignore)))
-
-(defn iconj [coll value]
-  (if (= value 'ignore) coll (conj coll value)))
-
-(defn +seq [& ps]
-  (reduce (partial _combine iconj) (_empty []) ps))
-
-(defn +string [st] (apply +seq (mapv #(+char (str %) )st)))
-
-(defn +seqf [f & ps] (+map (partial apply f) (apply +seq ps)))
-
-(defn +seqn [n & ps] (apply +seqf (fn [& vs] (nth vs n)) ps))
-
-(defn +or [p & ps]
-  (reduce _either p ps))
-(defn +opt [p]
-  (+or p (_empty nil)))
-
-(defn +star [p]
-  (letfn [(rec [] (+or (+seqf cons p (delay (rec))) (_empty ())))] (rec)))
-
-(defn +plus [p] (+seqf cons p (+star p)))
-(defn +str [p] (+map (partial apply str) p))
-
-(def *digit (+char "0123456789"))
+(comment "Simple parsers")
+(def *digit (+char "0123456789."))
 (def *number (+map read-string (+str (+plus *digit))))
-(def *double (+map read-string (+seqf str (+opt (+char "-")) *number (+opt (+seqf str (+char ".") *number)))))
-
-(def *space (+char " \t\n\r"))
+(def *string (fn [s] (+ignore (apply +seq (mapv #(+char (str %1)) s)))))
+(def *all-chars (mapv char (range 32 128)))
+(def *space (+char (apply str (filter #(Character/isWhitespace %) *all-chars))))
 (def *ws (+ignore (+star *space)))
-(defn or_string [args] (apply +or
-                              (mapv #(+string (str %))  args)))
+(def *letter (+char (apply str (filter #(Character/isLetter %) *all-chars))))
+(def *identifier (+str (+seqf cons *letter (+star (+or *letter *digit)))))
+(def *number (+map read-string (+str (+or (+plus *digit)
+                                          (+seqf cons *ws (+char "-") (+plus *digit))))))
+(def *variable (+str (+plus *letter)))
+(comment "Array")
+; (defn *array [p]
+;       (+seqn 1 (+char "[") p (+char "]")))
+; (defn *array [p]
+;       (+seqn 1 (+char "[") (+opt p) (+char "]")))
+; (defn *array [p]
+;       (+seqn 1 (+char "[") (+opt (+seq p (+star (+seqn 1 (+char ",") p)))) (+char "]")))
+; (defn *array [p]
+;       (+seqn 1 (+char "[") (+opt (+seqf cons p (+star (+seqn 1 (+char ",") p)))) (+char "]")))
+; (defn *array [p]
+;       (+seqn 1 (+char "[") (+opt (+seqf cons *ws p (+star (+seqn 1 *ws (+char ",") *ws p)))) *ws (+char "]")))
+(defn *seq [begin p end]
+      (+seqn 1 (+char begin) (+opt (+seqf cons *ws p (+star (+seqn 1 *ws (+char ",") *ws p)))) *ws (+char end)))
+(defn *array [p] (*seq "[" p "]"))
 
-(def OPERS [
-            ; [{
-            ;   '** Pow
-            ;   (symbol "//") Log} 0]
-            [{
-             '* Multiply
-             '/ Divide} 1]
-            [{
-              '+ Add
-             '- Subtract} 1]])
-
-(def UNARY {
-               'negate Negate})
-
-(defn setOpers[maps] (+seqf  #(get maps (symbol (apply str %))) (or_string (keys maps))))
-
-(def *Unary (setOpers UNARY))
-(def *Vars (+seqf #(Variable (apply str %)) (or_string ['x 'y 'z])))
-(def *Const (+seqf #(Constant %) *double))
-(def *Ones (+or *Const *Vars ))
-(def *arg (+seqf identity *ws *Ones *ws))
-(defn left[a b]  (if (empty? b) a
-                             (reduce #((first %2) %1 (last %2)) (concat [a] b))))
-(defn right[a b] (if (empty? b) a
-                             (letfn [(f[op b a] (op a b))]
-                               ((reduce #(partial f (first %2) (%1 (last %2))) (concat [identity] (reverse b))) a))))
-(defn unary[a b] (a b))
-(defn after[op arg] (+star (+seqf (fn[& a] (flatten a)) *ws op arg)))
-
-(declare *expr)
-
-(def *base (+or *arg
-             (+seqf unary *ws *Unary *ws (delay *base))
-             (+seqn 1 (+seq *ws (+char "(") *ws) (delay *expr) (+seq *ws (+char ")") *ws))))
-(def ASSOCIATES {0 right
-                 1 left})
-
-(defn setLevels[n] (if (= n -1) *base
-                               (let [n' (dec n)
-                                     level (nth OPERS n)
-                                     associate (get ASSOCIATES (last level))
-                                     *Opers (setOpers (first level))
-                                     *next (setLevels n')]
-                                 (+seqf associate *next (after *Opers *next)))))
-
-(def *expr (setLevels 1))
+(comment "Objects")
+(defn *member [p] (+seq *identifier *ws (+ignore (+char ":")) *ws p))
+(defn *object [p] (*seq "{" (*member p) "}"))
+(defn *object [p] (+map (partial reduce #(apply assoc %1 %2) {}) (*seq "{" (*member p) "}")))
 
 
-(defn parseObjectInfix[expr] ((_parser *expr) expr))
+
+(comment "Parser")
+(def *objects [{"+" Add "-" Subtract},
+               {"*" Multiply "/" Divide}
+               {"**" Pow "//" Log}])
+(declare *parseBinary)
+
+(def *parseUnary #(+or (+map Constant *number)
+                       (+map Negate (+seqn 0 (*string "negate") *ws (delay (*parseUnary)) *ws))
+                       (+map Variable *variable)
+                       (+seqn 1 (+char "(") *ws (delay (*parseBinary 0)) *ws (+char ")") *ws)))
+                       
+(def *parseBinary
+  #(let [*leftFolder (partial reduce (fn [fir [oper sec]] (oper fir sec)))
+         *rightFolder (fn [args] (letfn [(recFolder [fir rec-rest]
+                                                    (if (empty? rec-rest) fir
+                                                      ((first (first rec-rest)) fir (recFolder (second (first rec-rest)) (rest rec-rest)))))]
+                                 (recFolder (first args) (rest args))))
+         *parseOperation (fn [operations] (apply +or (mapv (fn [[key val]] (+seqf (constantly val) (*string key))) operations)))
+         *nextLevel (fn [level] (if (== (+ level 1) (count *objects)) (delay (*parseUnary))
+                                                                      (delay (*parseBinary (+ level 1)))))
+         *operand (*nextLevel %)
+         *getFolder (if (== % 2) *rightFolder *leftFolder)]
+    (+seqf (fn[oper rest-exp] (*getFolder (cons oper rest-exp)))
+           *operand (+star (+seq *ws (*parseOperation (nth *objects %)) *ws *operand)))))
+
+(def parseObjectInfix (+parser (+seqn 0 *ws (*parseBinary 0) *ws)))

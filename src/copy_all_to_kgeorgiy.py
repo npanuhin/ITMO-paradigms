@@ -67,6 +67,7 @@ def main():
     removeFromKgeorgiy("java-solutions")
     removeFromKgeorgiy("javascript-solutions")
     removeFromKgeorgiy("clojure-solutions")
+    removeFromKgeorgiy("prolog-solutions")
 
     copytree("MyClasses", ("java-solutions", "myclasses"))
 
@@ -97,6 +98,9 @@ def main():
     # copy(("HW12", "expression.clj"), ("clojure-solutions"))
     # copy(("HW12", "proto.clj"), ("clojure-solutions"))
     # copy(("HW12", "parser.clj"), ("clojure-solutions"))
+
+    copy(("HW13", "primes.pl"), ("prolog-solutions"))
+    # copy(("HW13", "primes.nocomments.pl"), ("prolog-solutions"))
 
 
 if __name__ == "__main__":

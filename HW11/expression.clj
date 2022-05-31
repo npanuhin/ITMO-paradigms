@@ -1,3 +1,5 @@
+; WARNING!!! VERY BAD!!!
+
 (load-file "proto.clj")
 
 (defn abstractOperation [f] (fn [& args] (fn [vars] (apply f (map #(% vars) args)))))
@@ -41,6 +43,7 @@
 
 ; ------------------------------ HW 11 ------------------------------
 
+; :NOTE: Дублирование
 (defn diff [expr target]
   ((proto-get expr :diff) expr target))
 (defn toString [expr]
@@ -56,10 +59,10 @@
   :evaluate (fn [this args] (apply f (mapv #(evaluate % args) (this :operands))))
   })
 
+
+; :NOTE: constructor
 (defn AbstractOperation [f sign f_diff]
-  (let [this {
-    :prototype (AbstractOperationPrototype f sign f_diff)
-    }]
+  (let [this {:prototype (AbstractOperationPrototype f sign f_diff)}]
     (fn [& args] (assoc this :operands args))))
 
 (defn Constant [x] {
@@ -69,22 +72,30 @@
   })
 
 (defn Variable [x] {
-  :diff     (fn [this target] (if (identical? target x) (Constant 1) (Constant 0)))
+; :NOTE: (Constant 1) (Constant 0)
+  :diff     (fn [this target] (if (= target x) (Constant 1) (Constant 0)))
   :evaluate (fn [this args] (get args x))
   :toString (fn [& args] (str x))
   })
 
+; :NOTE: Явное дифференцирование
 (def Add (AbstractOperation + "+" (fn [this target]
   (apply Add (map #(diff % target) (operands this))))))
 
 (def Subtract (AbstractOperation - "-" (fn [this target]
   (apply Subtract (map #(diff % target) (operands this))))))
 
-(def Multiply (AbstractOperation * "*" (fn [this target]
-  (apply Add (mapv
-    (fn [x] (apply Multiply (mapv (fn [y] (if (identical? x y) (diff x target) y)) (operands this))))
-    (operands this))))))
+; :NOTE: Квадрат
 
+;(Multiply x x)
+(def Multiply
+  (AbstractOperation * "*"
+                     (fn [this target]
+                       (apply Add (mapv
+                                    (fn [x] (apply Multiply (mapv (fn [y] (if (identical? x y) (diff x target) y)) (operands this))))
+                                    (operands this))))))
+
+; :NOTE: fn [a]
 (def Negate (AbstractOperation - "negate" (fn [this target]
   (let [x (first (operands this))]
     (Negate (diff x target))))))
@@ -107,6 +118,7 @@
 
 (def Sumexp (AbstractOperation sumexp-imp "sumexp" (fn [this target]
   (let [args (operands this)]
+    ; :NOTE: map
     (apply Add (for [i (range (count args))]
       (diff (Exp (nth args i)) target)))))))
 
@@ -124,4 +136,5 @@
   'softmax Softmax
   })
 
-(defn parseObject [expr] (parse OperationObjects Constant Variable (read-string expr)))
+; :NOTE: (defn parseFunction [expr] (parse OperantionFunctions constant variable (read-string expr)))
+(defn parseObject   [expr] (parse OperationObjects    Constant Variable (read-string expr)))
