@@ -102,6 +102,9 @@ def main():
     copy(("HW13", "primes.pl"), ("prolog-solutions"))
     # copy(("HW13", "primes.nocomments.pl"), ("prolog-solutions"))
 
+    copy(("HW14", "tree-map.pl"), ("prolog-solutions"))
+    copy(("HW14", "tree-map.nocomments.pl"), ("prolog-solutions"))
+
 
 if __name__ == "__main__":
     main()
