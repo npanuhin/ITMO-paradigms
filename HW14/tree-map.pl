@@ -1,3 +1,5 @@
+%% WARNING: poor code style, mainly because comments are over 120 characters wide
+
 %% node(Key, Value, Priority, Size, Left, Right)
 
 get_size(null, 0) :- !.  %% Размер пустого дерева

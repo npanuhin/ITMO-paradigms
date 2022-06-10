@@ -1,3 +1,5 @@
+%% WARNING: poor code style
+
 get_size(null, 0) :- !.
 get_size(node(Key, Value, Priority, Size, Left, Right), Size).
 node_gen(Key, Value, Priority, Left, Right, node(Key, Value, Priority, Size, Left, Right)) :- get_size(Left, SL),
